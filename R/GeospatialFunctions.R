@@ -152,7 +152,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   on.exit(options(timeout = original_timeout), add = TRUE)
   on.exit(suppressMessages(suppressWarnings(sf::sf_use_s2(original_s2))), add = TRUE)
 
-  message("Depending on your data's observation count and its spatial range, the ATTAINS pull may take a while.")
+  message("The number of observations and the spatial range of your data may slow fetching ATTAINS.")
 
   # EPSG we want our ATTAINS data to be in (always 4326 for this function)
   our_epsg <- 4326
