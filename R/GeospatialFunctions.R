@@ -160,9 +160,9 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   # If data is already spatial, just make sure it is in the right CRS
   # and add an index as the WQP observations' unique identifier...
   if (!is.null(.data) & inherits(.data, "sf")) {
-    if (sf::st_crs(.data)$epsg != our_epsg) {
+    if (sf::st_crs(.data)$epsg != out_epsg) {
       .data <- .data %>%
-        sf::st_transform(our_epsg) %>%
+        sf::st_transform(out_epsg) %>%
         dplyr::distinct(geometry, .keep_all = TRUE)
     } else {
       .data <- .data %>%
@@ -178,7 +178,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
       data.table::data.table(.) %>%
       dplyr::distinct(LongitudeMeasure, LatitudeMeasure, .keep_all = TRUE) %>%
       # convert dataframe to a spatial object
-      TADA_MakeSpatial(.data = ., crs = our_epsg)
+      TADA_MakeSpatial(.data = ., crs = out_epsg)
   }
 
   if (is.null(.data) | nrow(.data) == 0) {
@@ -211,7 +211,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
 
     repeat {
       query <- urltools::param_set(baseurls, key = "geometry", value = sf_bbox) %>%
-        urltools::param_set(key = "inSR", value = our_epsg) %>%
+        urltools::param_set(key = "inSR", value = out_epsg) %>%
         # Total of 1000 features at a time...
         urltools::param_set(key = "resultRecordCount", value = 1000) %>%
         # ... starting at the "offset":
