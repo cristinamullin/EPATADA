@@ -154,8 +154,8 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
 
   message("The number of observations and the spatial range of your data may slow fetching ATTAINS.")
 
-  # EPSG we want our ATTAINS data to be in (always 4326 for this function)
-  our_epsg <- 4326
+  # EPSG we want ATTAINS data to be in (always 4326 for this function)
+  out_epsg <- 4326
 
   # If data is already spatial, just make sure it is in the right CRS
   # and add an index as the WQP observations' unique identifier...
