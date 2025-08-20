@@ -157,9 +157,14 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   # EPSG we want ATTAINS data to be in (always 4326 for this function)
   out_epsg <- 4326
 
+  # Checks
   if (is.null(.data) | nrow(.data) == 0) {  # Check data is not empty
     stop("`data` object has no data to use for selecting ATTAINS features.")
   }
+  
+  geo_cols = c("LongitudeMeasure",
+               "LatitudeMeasure",
+               "HorizontalCoordinateReferenceSystemDatumName")
   
   # If data is already spatial, just make sure it is in the right CRS
   # and add an index as the WQP observations' unique identifier...
@@ -172,9 +177,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
       .data <- .data %>%
         dplyr::distinct(geometry, .keep_all = TRUE)
     }
-  } else if (!"LongitudeMeasure" %in% colnames(.data) |
-    !"LatitudeMeasure" %in% colnames(.data) |
-    !"HorizontalCoordinateReferenceSystemDatumName" %in% colnames(.data)) {
+  } else if (any(!geo_cols %in% colnames(.data))) {
     stop("The dataframe does not contain WQP-style latitude and longitude data (column names `HorizontalCoordinateReferenceSystemDatumName`, `LatitudeMeasure`, and `LongitudeMeasure`.")
   } else {
     # ... Otherwise transform into a spatial object then do the same thing:
