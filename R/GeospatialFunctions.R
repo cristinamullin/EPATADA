@@ -186,14 +186,14 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   }
 
   # REST for ATTAINS geospatial data:
-  baseurls <- c( # ATTAINS catchments:
-    "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/3/query?",
-    # ATTAINS points:
-    "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/0/query?",
-    # ATTAINS lines:
-    "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/1/query?",
-    # ATTAINS polygons:
-    "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/2/query?"
+  
+  base_url = "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/"
+
+  baseurls <- c(  # ATTAINS Layers for
+    paste(base_url, "3/query?", sep=""),  # catchments
+    paste(base_url, "0/query?", sep=""),  # points
+    paste(base_url, "1/query?", sep=""),  # lines
+    paste(base_url, "2/query?", sep=""),  # polygons
   )
 
   # function to download ATTAINS features based on a
