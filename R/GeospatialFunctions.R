@@ -190,14 +190,13 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   base_url = "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/"
 
   baseurls <- c(  # ATTAINS Layers for
-    paste(base_url, "3/query?", sep=""),  # catchments
-    paste(base_url, "0/query?", sep=""),  # points
-    paste(base_url, "1/query?", sep=""),  # lines
-    paste(base_url, "2/query?", sep=""),  # polygons
+    paste0(base_url, "3/query?"),  # catchments
+    paste0(base_url, "0/query?"),  # points
+    paste0(base_url, "1/query?"),  # lines
+    paste0(base_url, "2/query?")  # polygons
   )
 
-  # function to download ATTAINS features based on a
-  # specified bbox:
+  # function to download ATTAINS features based on specified bbox
   fetch_bbox <- function(baseurls, sf_bbox) {
     # starting at feature 1 (i.e., no offset):
     offset <- 0
