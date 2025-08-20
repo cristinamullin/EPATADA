@@ -180,7 +180,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   } else if (any(!geo_cols %in% colnames(.data))) {
     stop("The dataframe does not contain WQP-style latitude and longitude data (column names `HorizontalCoordinateReferenceSystemDatumName`, `LatitudeMeasure`, and `LongitudeMeasure`.")
   } else {
-    # ... Otherwise transform into a spatial object then do the same thing:
+    # Transform into a spatial object since it isn't and has geo columns
     .data <- .data %>%
       data.table::data.table(.) %>%
       dplyr::distinct(LongitudeMeasure, LatitudeMeasure, .keep_all = TRUE) %>%
@@ -290,8 +290,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     purrr::map_dfr(id_chunks, fetch_chunk)
   }
 
-  # function used to grab assessment unit "WaterType".
-  # (sweet spot chunk size wise is 50):
+  # function to get assessment unit "WaterType" (sweet spot chunk size = 50)
   grab_waterbody_type <- function(au_list, chunk_size = 50) {
     # Number of chunks needed
     num_chunks <- ceiling(length(au_list) / chunk_size)
@@ -495,18 +494,18 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
       silent = TRUE
     )
 
-    ## GRABBING WATER TYPE:
+    ## Get WATER TYPE:
     if (length(catchment_features) == 0 || is.null(catchment_features)) {
       message("There are no ATTAINS features associated with your WQP observations.")
     } else {
-      # Use ATTAINS API to grab, for each assessment unit, its WaterType.
+      # Use ATTAINS API to get WaterType for each assessment unit
       # Query the API in "chunks" so it doesn't break. sweet spot is ~50:
       all_units <- unique(catchment_features$assessmentunitidentifier)
       water_types <- grab_waterbody_type(all_units, chunk_size = 50)
       try(catchment_features <- dplyr::left_join(catchment_features, water_types, by = c("assessmentunitidentifier" = "assessmentUnitIdentifier")))
     }
 
-    # If only interested in grabbing catchment data, return just the catchments
+    # If only interested in catchment data, return just the catchments
     if (catchments_only == TRUE) {
       return(list("ATTAINS_catchments" = catchment_features))
     }
@@ -552,7 +551,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
 
     # If area is small (< 6e+9 square meters), just use the bbox in one pull:
   } else {
-    # FOR AOIs THAT ARE LESS THAN 6,000 sqkm, grab data in one go:
+    # FOR AOIs THAT ARE LESS THAN 6,000 sqkm, get data in one go:
     points_sf <- .data
 
     bbox <- points_sf %>%
@@ -575,14 +574,14 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     } else {
       ## GRABBING WATER TYPE:
 
-      # Use ATTAINS API to grab, for each assessment unit, its WaterType.
+      # Use ATTAINS API to get WaterType for each assessment unit
       # Query the API in "chunks" so it doesn't break:
       all_units <- unique(catchment_features$assessmentunitidentifier)
       water_types <- grab_waterbody_type(all_units, chunk_size = 50)
       try(catchment_features <- dplyr::left_join(catchment_features, water_types, by = c("assessmentunitidentifier" = "assessmentUnitIdentifier")), silent = TRUE)
     }
 
-    # If only interested in grabbing catchment data, return just the catchments
+    # Return only catchments
     if (catchments_only == TRUE) {
       return(list("ATTAINS_catchments" = catchment_features))
     }
