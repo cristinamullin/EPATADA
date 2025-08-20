@@ -157,9 +157,13 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   # EPSG we want ATTAINS data to be in (always 4326 for this function)
   out_epsg <- 4326
 
+  if (is.null(.data) | nrow(.data) == 0) {  # Check data is not empty
+    stop("`data` object has no data to use for selecting ATTAINS features.")
+  }
+  
   # If data is already spatial, just make sure it is in the right CRS
   # and add an index as the WQP observations' unique identifier...
-  if (!is.null(.data) & inherits(.data, "sf")) {
+  if (inherits(.data, "sf")) {
     if (sf::st_crs(.data)$epsg != out_epsg) {
       .data <- .data %>%
         sf::st_transform(out_epsg) %>%
@@ -179,10 +183,6 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
       dplyr::distinct(LongitudeMeasure, LatitudeMeasure, .keep_all = TRUE) %>%
       # convert dataframe to a spatial object
       TADA_MakeSpatial(.data = ., crs = out_epsg)
-  }
-
-  if (is.null(.data) | nrow(.data) == 0) {
-    stop("There is no data in your `data` object to use as a bounding box for selecting ATTAINS features.")
   }
 
   # REST for ATTAINS geospatial data:
