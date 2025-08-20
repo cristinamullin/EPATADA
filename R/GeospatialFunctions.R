@@ -142,7 +142,7 @@ TADA_MakeSpatial <- function(.data, crs = 4326) {
 #' 
 #' nv_attains_features <- EPATADA:::fetchATTAINS(tada_data, catchments_only = FALSE)
 #' }
-fetchATTAINS <- function(.data, catchments_only = FALSE) {
+fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
   # function settings that we ensure go back to their original settings
   # after the function stops running:
   original_s2 <- sf::sf_use_s2() # Store the original s2 setting first
@@ -193,14 +193,25 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   base_url = "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/"
 
   baseurls <- c(  # ATTAINS Layers for
-    paste0(base_url, "3/query?"),  # catchments
-    paste0(base_url, "0/query?"),  # points
-    paste0(base_url, "1/query?"),  # lines
-    paste0(base_url, "2/query?")  # polygons
+    paste0(base_url, "3"),  # catchments
+    paste0(base_url, "0"),  # points
+    paste0(base_url, "1"),  # lines
+    paste0(base_url, "2")  # polygons
   )
 
   # function to download ATTAINS features based on specified bbox
-  fetch_bbox <- function(baseurls, sf_bbox) {
+  fetch_bbox <- function(baseurl, sf_bbox) {
+    # Determine max count
+    layer_url = paste0(baseurl, "?f=pjson")
+    
+    req <- httr2::request(layer_url)
+    res <- req|>
+      httr2::req_perform() |> 
+      httr2::resp_body_json(check_type = FALSE)
+    maxCount <- res$maxRecordCount
+    #forcing to 2k - somewhere above that it gets 500 error transfer threshold?
+    maxCount <- 2000
+    
     # starting at feature 1 (i.e., no offset):
     offset <- 0
     # empty list to store all features in
@@ -212,31 +223,37 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     # together.
 
     repeat {
-      query <- urltools::param_set(baseurls, key = "geometry", value = sf_bbox) %>%
-        urltools::param_set(key = "inSR", value = out_epsg) %>%
-        # Total of 1000 features at a time...
-        urltools::param_set(key = "resultRecordCount", value = 1000) %>%
-        # ... starting at the "offset":
-        urltools::param_set(key = "resultOffset", value = offset) %>%
-        urltools::param_set(key = "spatialRel", value = "esriSpatialRelIntersects") %>%
-        urltools::param_set(key = "f", value = "geojson") %>%
-        urltools::param_set(key = "outFields", value = "*") %>%
-        urltools::param_set(key = "geometryType", value = "esriGeometryEnvelope") %>%
-        urltools::param_set(key = "returnGeometry", value = "true") %>%
-        urltools::param_set(key = "returnTrueCurves", value = "false") %>%
-        urltools::param_set(key = "returnIdsOnly", value = "false") %>%
-        urltools::param_set(key = "returnCountOnly", value = "false") %>%
-        urltools::param_set(key = "returnZ", value = "false") %>%
-        urltools::param_set(key = "returnM", value = "false") %>%
-        urltools::param_set(key = "returnDistinctValues", value = "false") %>%
-        urltools::param_set(key = "returnExtentOnly", value = "false") %>%
-        urltools::param_set(key = "featureEncoding", value = "esriDefault")
+      url = paste0(baseurl, "/query")
+      req <- httr2::request(url)
+      req <- req |> 
+        httr2::req_url_query("geometry" = sf_bbox, 
+                      "inSR" = out_epsg,
+                      "resultRecordCount" = maxCount,  # 2967,
+                      "resultOffset"= offset,
+                      "spatialRel" = "esriSpatialRelIntersects",
+                      "f" = "geojson",
+                      "outFields" = "*",
+                      "geometryType" = "esriGeometryEnvelope",
+                      "returnGeometry" = "true",
+                      "returnTrueCurves" = "false",
+                      "returnIdsOnly" = "false",
+                      "returnCountOnly" = "false",
+                      "returnZ" = "false",
+                      "returnM" = "false",
+                      "returnDistinctValues" = "false",
+                      "returnExtentOnly" = "false",
+                      "featureEncoding"= "esriDefault"
+                      )
+      response <- req|>
+        httr2::req_method("POST") |>
+        httr2::req_perform() |>
+        httr2::resp_body_string()
 
       # Fetch features within the offset window and append to list:
       features <- suppressMessages(suppressWarnings({
         tryCatch(
           {
-            geojsonsf::geojson_sf(url(query))
+            geojsonsf::geojson_sf(response)
           },
           error = function(e) {
             NULL
@@ -251,7 +268,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
 
       all_features <- c(all_features, list(features))
       # once done, change offset by 1000 features:
-      offset <- offset + 1000
+      offset <- offset + maxCount
     }
 
     all_features <- dplyr::bind_rows(all_features) %>%
