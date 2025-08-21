@@ -24,8 +24,7 @@ description: An introduction to using the EPATADA R package to retrieve, clean, 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
-                      message = FALSE,
-                      eval = F)
+                      message = FALSE)
 ```
 
 ```{css, include = F}
@@ -133,29 +132,33 @@ TADA_DataRetrieval. This allows us to download WQP data within the
 Assessment Unit (our area of interest/AOI).
 
 ```{r TADA_DataRetrieval}
+# Define query parameters for the ArcGIS service
 query_params <- list(
   where = "assessmentunitidentifier IN ('CT6400-00-1-L5_01')",
   outFields = "*",
   f = "geojson"
 )
 
+# Define the base URL to the ArcGIS service
 url <- "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer/2/query?"
 
-# Create a request object and set the query parameters
+# Create a request object using httr2
 request <- httr2::request(url) %>%
   httr2::req_url_query(!!!query_params)
 
 # Perform the GET request
-poly_response <- request %>%
-  httr2::req_perform()
+response <- request %>% httr2::req_perform()
 
-# Extract the content as text
-poly_geojson <- poly_response %>%
-  httr2::resp_body_string()
+# Check if the request was successful
+if (httr2::resp_status(response) != 200) {
+  stop("Failed to retrieve data from the ArcGIS service.")
+}
 
-# Read the geojson into an sf object
+# Extract the content as text and parse as GeoJSON
+poly_geojson <- response %>% httr2::resp_body_string()
 poly_sf <- sf::st_read(poly_geojson, quiet = TRUE)
 
+# Use the sf object in TADA_DataRetrieval
 WQP_raw <- TADA_DataRetrieval(
   startDate = "null",
   endDate = "null",
