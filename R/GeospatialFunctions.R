@@ -167,15 +167,11 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
                "HorizontalCoordinateReferenceSystemDatumName")
   
   # If data is already spatial ensure it is in the right CRS
-  # and add an index as the WQP observations' unique identifier...
+  # and add an index as the WQP observations' unique ID
   if (inherits(.data, "sf")) {
     if (sf::st_crs(.data)$epsg != out_epsg) {
-      .data <- .data %>%
-        sf::st_transform(out_epsg) %>%
-        dplyr::distinct(geometry, .keep_all = TRUE)
-    } else {
-      .data <- .data %>%
-        dplyr::distinct(geometry, .keep_all = TRUE)
+      .data <- .data %>% sf::st_transform(out_epsg)
+    .data <- .data %>% dplyr::distinct(geometry, .keep_all = TRUE)
     }
   } else if (any(!geo_cols %in% colnames(.data))) {
     stop("The dataframe does not contain WQP-style latitude and longitude data (column names `HorizontalCoordinateReferenceSystemDatumName`, `LatitudeMeasure`, and `LongitudeMeasure`.")
