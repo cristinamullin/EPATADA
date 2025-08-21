@@ -166,7 +166,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
                "LatitudeMeasure",
                "HorizontalCoordinateReferenceSystemDatumName")
   
-  # If data is already spatial, just make sure it is in the right CRS
+  # If data is already spatial ensure it is in the right CRS
   # and add an index as the WQP observations' unique identifier...
   if (inherits(.data, "sf")) {
     if (sf::st_crs(.data)$epsg != out_epsg) {
@@ -203,54 +203,63 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   
   # function to download ATTAINS features based on specified bbox
   fetch_bbox <- function(baseurl, sf_bbox) {
-    # Determine max count
-    layer_url = paste0(baseurl, "?f=pjson")
     
-    req <- httr2::request(layer_url)
-    res <- req 
+    # Determine max count from layer
+    layer_req <- httr2::request(paste0(baseurl, "?f=pjson"))
+    layer_res <- layer_req |> 
       httr2::req_perform() |> 
       httr2::resp_body_json(check_type = FALSE)
     maxCount <- res$maxRecordCount
-    
     if (maxCount > 2000) {maxCount <- 2000}  # Force 2k limit (esri default)
     
-    # starting at feature 1 (i.e., no offset):
-    offset <- 0
-    # empty list to store all features in
-    all_features <- list()
+    # parameters used across all requests
+    # Not: "resultOffset"= offset, "resultRecordCount" = maxCount,
+    query_params = list("geometry" = sf_bbox, 
+                        "inSR" = out_epsg,
+                        "spatialRel" = "esriSpatialRelIntersects",
+                        "f" = "geojson",
+                        "outFields" = "*",
+                        "geometryType" = "esriGeometryEnvelope",
+                        "returnGeometry" = "true",
+                        "returnTrueCurves" = "false",
+                        "returnIdsOnly" = "false",
+                        "returnCountOnly" = "true",
+                        "returnZ" = "false",
+                        "returnM" = "false",
+                        "returnDistinctValues" = "false",
+                        "returnExtentOnly" = "false",
+                        "featureEncoding"= "esriDefault"
+                        )
+    
+    # Set up standard request
+    req <- httr2::request(paste0(baseurl, "/query")) %>%
+      httr2::req_url_query(!!!query_params)
 
-    # The ATTAINS API has a limit of 1000 features that can be pulled in at once.
-    # Therefore, we must split the call into manageable "chunks" using a moving
-    # window of what features to pull in, then munging all the separate API calls
-    # together.
+    # Get expected results count
+    count_response <- req |>
+      httr2::req_method("POST") |>
+      httr2::req_perform() |>
+      httr2::resp_body_json()
+    results_count <- count_response$"count"
+    
+    offset <- 0  # Start at first page of results (i.e., no offset)
+    all_features <- list()  # Empty list to store feature results
 
+    # Batch requests to the ATTAINS API based on maxCount and results_count 
     repeat {
-      req <- httr2::request(paste0(baseurl, "/query"))
+      print(offset)
+      # Update request for current iteration
       req <- req |> 
-        httr2::req_url_query("geometry" = sf_bbox, 
-                      "inSR" = out_epsg,
-                      "resultRecordCount" = maxCount,  # 2967,
+        httr2::req_url_query("resultRecordCount" = maxCount,
                       "resultOffset"= offset,
-                      "spatialRel" = "esriSpatialRelIntersects",
-                      "f" = "geojson",
-                      "outFields" = "*",
-                      "geometryType" = "esriGeometryEnvelope",
-                      "returnGeometry" = "true",
-                      "returnTrueCurves" = "false",
-                      "returnIdsOnly" = "false",
                       "returnCountOnly" = "false",
-                      "returnZ" = "false",
-                      "returnM" = "false",
-                      "returnDistinctValues" = "false",
-                      "returnExtentOnly" = "false",
-                      "featureEncoding"= "esriDefault"
                       )
       response <- req|>
         httr2::req_method("POST") |>
         httr2::req_perform() |>
         httr2::resp_body_string()
 
-      # Fetch features within the offset window and append to list:
+      # Fetch features within the offset page
       features <- suppressMessages(suppressWarnings({
         tryCatch(
           {
@@ -262,14 +271,18 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
         )
       }))
 
-      # Exit loop if no more features or error occurred
+      # Exit loop if no more features or error occurred (Shouldn't happen now)
       if (is.null(features) || nrow(features) == 0) {
         break
       }
 
+      offset <- offset + maxCount  # Update offset
+
       all_features <- c(all_features, list(features))
-      # once done, change offset by max number of features
-      offset <- offset + maxCount
+      
+      # Exit if done
+      if (results_count<offset) {break}
+      
     }
 
     all_features <- dplyr::bind_rows(all_features) %>%
