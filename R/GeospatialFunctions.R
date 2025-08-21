@@ -209,8 +209,8 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
       httr2::req_perform() |> 
       httr2::resp_body_json(check_type = FALSE)
     maxCount <- res$maxRecordCount
-    #forcing to 2k - somewhere above that it gets 500 error transfer threshold?
-    maxCount <- 2000
+    
+    if (maxCount > 2000) {maxCount <- 2000}  # Force 2k limit (esri default)
     
     # starting at feature 1 (i.e., no offset):
     offset <- 0
