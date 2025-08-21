@@ -24,7 +24,8 @@ description: An introduction to using the EPATADA R package to retrieve, clean, 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
                       warning = FALSE, 
-                      message = FALSE)
+                      message = FALSE, 
+                      eval = F)
 ```
 
 ```{css, include = F}
@@ -253,7 +254,7 @@ TADA.ResultMeasure.MeasureUnitCode.
 ```{r TADA_FieldValuesTable2}
 # use TADA_FieldValuesTable to create a table of the number of results per TADA.ComparableDataIdentifier
 chars <- TADA_FieldValuesTable(
-  WQP_clean,
+  WQP_raw,
   field = "TADA.ComparableDataIdentifier",
   characteristicName = "null"
 )
@@ -278,7 +279,7 @@ another, this can be done using the org_hierarchy argument in
 
 ```{r duplicates}
 # find duplicates from single org
-WQP_flag <- TADA_FindPotentialDuplicatesSingleOrg(WQP_clean)
+WQP_flag <- TADA_FindPotentialDuplicatesSingleOrg(WQP_raw)
 
 # Review organizations. You can select one to prioritize in TADA_FindPotentialDuplicatesMultipleOrgs
 unique(WQP_flag$OrganizationIdentifier)
