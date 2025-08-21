@@ -142,7 +142,7 @@ TADA_MakeSpatial <- function(.data, crs = 4326) {
 #' 
 #' nv_attains_features <- EPATADA:::fetchATTAINS(tada_data, catchments_only = FALSE)
 #' }
-fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
+fetchATTAINS <- function(.data, catchments_only = FALSE) {
   # function settings that we ensure go back to their original settings
   # after the function stops running:
   original_s2 <- sf::sf_use_s2() # Store the original s2 setting first
@@ -202,12 +202,12 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
   )
   
   # function to download ATTAINS features based on specified bbox
-  fetch_bbox2 <- function(baseurl, sf_bbox) {
+  fetch_bbox <- function(baseurl, sf_bbox) {
     # Determine max count
     layer_url = paste0(baseurl, "?f=pjson")
     
     req <- httr2::request(layer_url)
-    res <- req|>
+    res <- req 
       httr2::req_perform() |> 
       httr2::resp_body_json(check_type = FALSE)
     maxCount <- res$maxRecordCount
@@ -225,8 +225,7 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
     # together.
 
     repeat {
-      url = paste0(baseurl, "/query")
-      req <- httr2::request(url)
+      req <- httr2::request(paste0(baseurl, "/query"))
       req <- req |> 
         httr2::req_url_query("geometry" = sf_bbox, 
                       "inSR" = out_epsg,
@@ -269,7 +268,7 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
       }
 
       all_features <- c(all_features, list(features))
-      # once done, change offset by 1000 features:
+      # once done, change offset by max number of features
       offset <- offset + maxCount
     }
 
@@ -497,7 +496,7 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
           urltools::url_encode(.)
       }))
 
-      catchment_features[[i]] <- fetch_bbox(baseurls = baseurls[1], sf_bbox = bbox)
+      catchment_features[[i]] <- fetch_bbox(baseurl = baseurls[1], sf_bbox = sf_bbox)
     }
 
     catchment_features <- catchment_features %>%
@@ -566,12 +565,10 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
 
     return(final_features)
 
-    # If area is small (< 6e+9 square meters), just use the bbox in one pull:
+    # If area is small (< 6e+9 square meters), just use the bbox in one request
   } else {
-    # FOR AOIs THAT ARE LESS THAN 6,000 sqkm, get data in one go:
-    sf_bbox <- bbox
-      toString(.) %>%  # convert bounding box to characters
-      urltools::url_encode(.)  # encode for use within the API URL
+    # FOR AOIs THAT ARE LESS THAN 6,000 sqkm, get data in one request
+    sf_bbox <- bbox %>% toString() %>%urltools::url_encode()  # Encoded bbox str
 
     catchment_features <- fetch_bbox(baseurls = baseurls[1], sf_bbox = sf_bbox)
 
