@@ -271,7 +271,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
       #   outFields = "*",
       #   f = "geojson"
       # )
-      url = gsub("/query\\?", "", baseurl)){
+      url = gsub("/query\\?", "", baseurl))
       response <- arcgislayers::arc_open(url)
       attains_units <- arcgislayers::arc_select(response,
                                                 where = where_clause)
@@ -279,7 +279,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
       # Assuming response is the object returned by arcgislayers::get_layer()
       # if (!is.null(response$status_code) && response$status_code != 200) {
       #   stop("Failed to retrieve data from EPA ATTAINS API.")
-      # }
+      }
 
       # Assuming response is the object returned by arcgislayers::get_layer()
       # Extract the content as text (if needed) and parse it as JSON
