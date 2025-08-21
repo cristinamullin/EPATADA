@@ -272,21 +272,16 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
         f = "geojson"
       )
 
-      # response <- httr::GET(baseurls, query = query_params)
-      response <- httr2::request(baseurls) %>%
-        httr2::req_url_query(query_params) %>%
-        httr2::req_perform()
+      response <- arcgislayers::get_layer(baseurls, query_params)
 
-      # if (httr::status_code(response) != 200) {
-      #   stop("Failed to retrieve data from EPA ATTAINS API.")
-      # }
-      
-      if (httr2::resp_status(response) != 200) {
+      # Assuming response is the object returned by arcgislayers::get_layer()
+      if (!is.null(response$status_code) && response$status_code != 200) {
         stop("Failed to retrieve data from EPA ATTAINS API.")
       }
 
-      # geojson_data <- httr::content(response, as = "text", encoding = "UTF-8")
-      geojson_data <- httr2::resp_body_string(response)
+      # Assuming response is the object returned by arcgislayers::get_layer()
+      # Extract the content as text (if needed) and parse it as JSON
+      geojson_data <- jsonlite::fromJSON(response$content)
       sf_object <- sf::st_read(geojson_data, quiet = TRUE)
 
       return(sf_object)
@@ -308,18 +303,12 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     water_types <- vector("list", length = length(chunks))
 
     for (i in 1:length(chunks)) {
-      # dat <- httr::GET(utils::URLencode(paste0("https://attains.epa.gov/attains-public/api/assessmentUnits?assessmentUnitIdentifier=", paste(chunks[[i]], collapse = ",")))) %>%
-      #   httr::content(., as = "text", encoding = "UTF-8") %>%
-      #   jsonlite::fromJSON(.)
-      
+      # Construct the URL for the API request
       url <- utils::URLencode(paste0("https://attains.epa.gov/attains-public/api/assessmentUnits?assessmentUnitIdentifier=", paste(chunks[[i]], collapse = ",")))
-      
-      response <- httr2::request(url) %>%
-        httr2::req_perform()
-      
-      dat <- response %>%
-        httr2::resp_body_string() %>%
-        jsonlite::fromJSON()
+      # Use arcgislayers to make the GET request
+      response <- arcgislayers::get_layer(url)
+      # Extract the content as text and parse JSON
+      dat <- jsonlite::fromJSON(response$content)
 
       water_types[[i]] <- dat[["items"]] %>%
         tidyr::unnest("assessmentUnits") %>%
@@ -1877,22 +1866,17 @@ TADA_GetATTAINSByAUID <- function(.data, au_ref = NULL, add_catch = FALSE) {
         f = "geojson"
       )
 
-      # response <- httr::GET(baseurls, query = query_params)
+      response <- arcgislayers::get_layer(baseurls, query_params)
       
-      response <- httr2::request(baseurls) %>%
-        httr2::req_url_query(query_params) %>%
-        httr2::req_perform()
-
-      # if (httr::status_code(response) != 200) {
-      #   stop("Failed to retrieve data from EPA ATTAINS API.")
-      # }
-
-      if (httr2::resp_status(response) != 200) {
+      # Check if response has a status_code attribute and handle errors
+      if (!is.null(response$status_code) && response$status_code != 200) {
         stop("Failed to retrieve data from EPA ATTAINS API.")
       }
       
-      # geojson_data <- httr::content(response, as = "text", encoding = "UTF-8")
-      geojson_data <- httr2::resp_body_string(response)
+      # Assuming response is the result from arcgislayers::get_layer()
+      # Extract the content directly if it's in JSON format
+      geojson_data <- jsonlite::fromJSON(response$content)
+      
       sf_object <- sf::st_read(geojson_data, quiet = TRUE)
 
       return(sf_object)
