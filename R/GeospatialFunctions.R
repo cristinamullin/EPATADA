@@ -258,7 +258,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   }
 
   # function to download ATTAINS features API based on their name
-  fetch_au <- function(baseurls, assessment_unit_ids) {
+  fetch_au <- function(baseurl, assessment_unit_ids) {
     # Split the assessment_unit_ids into chunks of 1000
     # API cannot handle more than 1000 features
     id_chunks <- split(assessment_unit_ids, ceiling(seq_along(assessment_unit_ids) / 100))
@@ -266,25 +266,27 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     # Query API for a chunk of assessment unit IDs
     fetch_chunk <- function(id_chunk) {
       where_clause <- paste0("assessmentunitidentifier IN ('", paste(id_chunk, collapse = "','"), "')")
-      query_params <- list(
-        where = where_clause,
-        outFields = "*",
-        f = "geojson"
-      )
-
-      response <- arcgislayers::get_layer(baseurls, query_params)
+      # query_params <- list(
+      #   where = where_clause,
+      #   outFields = "*",
+      #   f = "geojson"
+      # )
+      url = gsub("/query\\?", "", baseurl)){
+      response <- arcgislayers::arc_open(url)
+      attains_units <- arcgislayers::arc_select(response,
+                                                where = where_clause)
 
       # Assuming response is the object returned by arcgislayers::get_layer()
-      if (!is.null(response$status_code) && response$status_code != 200) {
-        stop("Failed to retrieve data from EPA ATTAINS API.")
-      }
+      # if (!is.null(response$status_code) && response$status_code != 200) {
+      #   stop("Failed to retrieve data from EPA ATTAINS API.")
+      # }
 
       # Assuming response is the object returned by arcgislayers::get_layer()
       # Extract the content as text (if needed) and parse it as JSON
-      geojson_data <- jsonlite::fromJSON(response$content)
-      sf_object <- sf::st_read(geojson_data, quiet = TRUE)
+      # geojson_data <- jsonlite::fromJSON(response$content)
+      # sf_object <- sf::st_read(geojson_data, quiet = TRUE)
 
-      return(sf_object)
+      return(attains_units)
     }
 
     # fetch all chunks and combine results
