@@ -187,6 +187,8 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
       # convert dataframe to a spatial object
       TADA_MakeSpatial(.data = ., crs = out_epsg)
   }
+  
+  bbox <- .data %>% sf::st_bbox(.)  # Bounding Box
 
   # REST for ATTAINS geospatial data:
   
@@ -198,9 +200,9 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
     paste0(base_url, "1"),  # lines
     paste0(base_url, "2")  # polygons
   )
-
+  
   # function to download ATTAINS features based on specified bbox
-  fetch_bbox <- function(baseurl, sf_bbox) {
+  fetch_bbox2 <- function(baseurl, sf_bbox) {
     # Determine max count
     layer_url = paste0(baseurl, "?f=pjson")
     
@@ -333,10 +335,8 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
     return(dplyr::bind_rows(water_types))
   }
 
-  # FOR AOIs THAT ARE GREATER THAN 6,000 sqkm, split into "clusters":
-  if (as.numeric(sf::st_area(sf::st_as_sfc(.data %>% sf::st_bbox(.)))) >= 6e+9) {
-    # For user-specified AOIs with a large spatial range, create "clusters" of sites
-    # whose bounding boxes are smaller.
+  # AOIs > 6,000 sqkm, split into "clusters"
+  if (as.numeric(sf::st_area(sf::st_as_sfc(bbox))) >= 6e+9) {
     perform_iterative_clustering <- function(points_sf, min_area = 6e+9, max_iterations = 100) {
       # fxn to calculate each cluster's bounding box area
       bbox_area <- function(df, clust) {
@@ -569,16 +569,11 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
     # If area is small (< 6e+9 square meters), just use the bbox in one pull:
   } else {
     # FOR AOIs THAT ARE LESS THAN 6,000 sqkm, get data in one go:
-    points_sf <- .data
+    sf_bbox <- bbox
+      toString(.) %>%  # convert bounding box to characters
+      urltools::url_encode(.)  # encode for use within the API URL
 
-    bbox <- points_sf %>%
-      sf::st_bbox(.) %>%
-      # convert bounding box to characters
-      toString(.) %>%
-      # encode for use within the API URL
-      urltools::url_encode(.)
-
-    catchment_features <- fetch_bbox(baseurls = baseurls[1], sf_bbox = bbox)
+    catchment_features <- fetch_bbox(baseurls = baseurls[1], sf_bbox = sf_bbox)
 
     try(
       catchment_features <- catchment_features %>%
@@ -595,7 +590,10 @@ fetchATTAINS3 <- function(.data, catchments_only = FALSE) {
       # Query the API in "chunks" so it doesn't break:
       all_units <- unique(catchment_features$assessmentunitidentifier)
       water_types <- grab_waterbody_type(all_units, chunk_size = 50)
-      try(catchment_features <- dplyr::left_join(catchment_features, water_types, by = c("assessmentunitidentifier" = "assessmentUnitIdentifier")), silent = TRUE)
+      try(catchment_features <- dplyr::left_join(catchment_features,
+                                                 water_types,
+                                                 by = c("assessmentunitidentifier" = "assessmentUnitIdentifier")
+                                                 ), silent = TRUE)
     }
 
     # Return only catchments
