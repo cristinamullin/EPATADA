@@ -155,7 +155,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
   message("The number of observations and the spatial range of your data may slow fetching ATTAINS.")
 
   # EPSG we want ATTAINS data to be in (always 4326 for this function)
-  out_epsg <- 4326
+  out_epsg <- 4326 # Service is 3857
 
   # Checks
   if (is.null(.data) | nrow(.data) == 0) {  # Check data is not empty
@@ -214,18 +214,19 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
                         "inSR" = out_epsg,
                         "spatialRel" = "esriSpatialRelIntersects",
                         "f" = "geojson",
-                        "outFields" = "*",
                         "geometryType" = "esriGeometryEnvelope",
                         "returnGeometry" = "true",
                         "returnTrueCurves" = "false",
                         "returnIdsOnly" = "false",
-                        "returnCountOnly" = "true",
-                        "returnZ" = "false",
-                        "returnM" = "false",
-                        "returnDistinctValues" = "false",
-                        "returnExtentOnly" = "false",
-                        "featureEncoding"= "esriDefault"
+                        "returnCountOnly" = "true"
                         )
+#    "outFields" = "*",
+#                        "returnZ" = "false",
+#                        "returnM" = "false",
+#                        "returnDistinctValues" = "false",
+#                        "returnExtentOnly" = "false",
+#                        "featureEncoding"= "esriDefault"
+#                        )
     
     # Set up standard request
     req <- httr2::request(paste0(baseurl, "/query")) %>%
