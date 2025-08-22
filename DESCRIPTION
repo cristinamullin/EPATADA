@@ -85,7 +85,6 @@ Imports:
 Depends: 
     R (>= 4.1.0)
 Suggests:
-    httr2, 
     curl (>= 6.0.0),
     xml2,
     whisker,

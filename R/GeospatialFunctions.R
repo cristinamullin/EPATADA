@@ -266,25 +266,11 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     # Query API for a chunk of assessment unit IDs
     fetch_chunk <- function(id_chunk) {
       where_clause <- paste0("assessmentunitidentifier IN ('", paste(id_chunk, collapse = "','"), "')")
-      # query_params <- list(
-      #   where = where_clause,
-      #   outFields = "*",
-      #   f = "geojson"
-      # )
-      url = gsub("/query\\?", "", baseurl))
+
+      url = gsub("/query\\?", "", baseurl)
       response <- arcgislayers::arc_open(url)
       attains_units <- arcgislayers::arc_select(response,
                                                 where = where_clause)
-
-      # Assuming response is the object returned by arcgislayers::get_layer()
-      # if (!is.null(response$status_code) && response$status_code != 200) {
-      #   stop("Failed to retrieve data from EPA ATTAINS API.")
-      }
-
-      # Assuming response is the object returned by arcgislayers::get_layer()
-      # Extract the content as text (if needed) and parse it as JSON
-      # geojson_data <- jsonlite::fromJSON(response$content)
-      # sf_object <- sf::st_read(geojson_data, quiet = TRUE)
 
       return(attains_units)
     }
@@ -305,6 +291,7 @@ fetchATTAINS <- function(.data, catchments_only = FALSE) {
     water_types <- vector("list", length = length(chunks))
 
     for (i in 1:length(chunks)) {
+
       # Construct the URL for the API request
       url <- utils::URLencode(paste0("https://attains.epa.gov/attains-public/api/assessmentUnits?assessmentUnitIdentifier=", paste(chunks[[i]], collapse = ",")))
       # Use arcgislayers to make the GET request
