@@ -77,8 +77,10 @@ testthat::test_that("fetchATTAINS handles catchments_only parameter", {
 
   # Test with catchments_only = TRUE
   testthat::expect_no_error(
-    result_catchments_only <- EPATADA:::fetchATTAINS(.data = valid_data, 
-                                                     catchments_only = TRUE)
+    result_catchments_only <- EPATADA:::fetchATTAINS(
+      .data = valid_data,
+      catchments_only = TRUE
+    )
   )
 
   # Test with catchments_only = FALSE
