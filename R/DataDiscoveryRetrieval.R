@@ -90,8 +90,10 @@
 #'        downloads begin. Defaults to TRUE.
 #' @param applyautoclean Logical, defaults to TRUE. Applies TADA_AutoClean function on the returned
 #'        data profile. Suggest switching to FALSE for queries that are expected to be large.
+#' @param max_attempts Numeric. Specifies the maximum number of attempts to
+#'        retrieve data if an error occurs. Default is 3.
 #'
-#' @return TADA-compatible dataframe
+#' @return TADA-compatible dataframe, or an empty data frame if data retrieval fails after the specified number of attempts.
 #'
 #' @note
 #' Alaska Native Villages and Virginia Federally Recognized Tribes are point
@@ -191,16 +193,14 @@ TADA_DataRetrieval <- function(startDate = "null",
                                bBox = "null",
                                maxrecs = 350000,
                                ask = TRUE,
-                               applyautoclean = TRUE) {
+                               applyautoclean = TRUE,
+                               max_attempts = 3) {
   # Require one tribal area type:
   if (length(tribal_area_type) > 1) {
     stop("tribal_area_type must be of length 1.")
   }
 
   # Check for incomplete or inconsistent inputs:
-
-  # If both an sf object and tribe information are provided it's unclear what
-  # the priority should be for the query
   if (!is.null(aoi_sf) &
     any((tribal_area_type != "null") | (tribe_name_parcel != "null"))) {
     stop(
@@ -211,12 +211,8 @@ TADA_DataRetrieval <- function(startDate = "null",
     )
   }
 
-  # Check for other arguments that indicate location. Function will ignore
-  # these inputs but warn the user
   if (
-    # sf object provided
     (!is.null(aoi_sf) & inherits(aoi_sf, "sf")) &
-      # with additional location info
       any(
         (countrycode != "null"), (countycode != "null"), (huc != "null"),
         (siteid != "null"), (statecode != "null")
@@ -229,9 +225,7 @@ TADA_DataRetrieval <- function(startDate = "null",
       )
     )
   } else if (
-    # Tribe info provided
     (tribal_area_type != "null") &
-      # with additional location info
       any(
         (countrycode != "null"), (countycode != "null"), (huc != "null"),
         (siteid != "null"), (statecode != "null")
@@ -245,24 +239,43 @@ TADA_DataRetrieval <- function(startDate = "null",
     )
   }
 
-  # Insufficient tribal info provided:
-  # Type but no name or parcel
   if ((tribal_area_type != "null") & all(tribe_name_parcel == "null")) {
     stop("A tribe_name_parcel is required if tribal_area_type is provided.")
   }
-  # Parcel but no type
   if ((tribal_area_type == "null") & all(tribe_name_parcel != "null")) {
     stop("A tribal_area_type is required if tribe_name_parcel is provided.")
   }
 
-  # Before proceeding make quiet wrappers for dataRetrieval functions for later
-  # use in if/else processes
   quiet_whatWQPsites <- purrr::quietly(dataRetrieval::whatWQPsites)
   quiet_whatWQPdata <- purrr::quietly(dataRetrieval::whatWQPdata)
   quiet_readWQPdata <- purrr::quietly(dataRetrieval::readWQPdata)
 
-  # If an sf object OR tribal info are provided they will be the basis of the query
-  # (The tribal data handling uses sf objects as well)
+  # Function to attempt data retrieval with retry logic
+  attempt_data_retrieval <- function(query_func, ...) {
+    attempt <- 1
+    while (attempt <= max_attempts) {
+      result <- tryCatch(
+        {
+          query_func(...)
+        },
+        httr2_http_500 = function(e) {
+          message("Attempt ", attempt, ": 500 Internal Server Error occurred.")
+          return(NULL)
+        },
+        error = function(e) {
+          message("Attempt ", attempt, ": An error occurred - ", e$message)
+          return(NULL)
+        }
+      )
+      if (!is.null(result)) {
+        return(result)
+      }
+      attempt <- attempt + 1
+    }
+    message("Failed to retrieve data after ", max_attempts, " attempts due to persistent errors.")
+    return(data.frame())
+  }
+
   if ((!is.null(aoi_sf) & inherits(aoi_sf, "sf")) | (tribal_area_type != "null")) {
     # Build the non-sf part of the query:
 
@@ -424,17 +437,15 @@ TADA_DataRetrieval <- function(startDate = "null",
     input_bbox <- sf::st_bbox(aoi_sf)
 
     # Query info on available data within the bbox
-
-    # Try getting WQP info
     message("Checking for available data. This may take a moment.")
 
-    # Don't want to print every message that's returned by WQP
-    quiet_bbox_avail <- quiet_whatWQPdata(
+    # Use attempt_data_retrieval for the data retrieval parts
+    quiet_bbox_avail <- attempt_data_retrieval(
+      quiet_whatWQPdata,
       WQPquery,
       bBox = c(input_bbox$xmin, input_bbox$ymin, input_bbox$xmax, input_bbox$ymax)
     )
 
-    # Alert & stop if an http error was received
     if (is.null(quiet_bbox_avail$result)) {
       stop_message <- quiet_bbox_avail$messages %>%
         grep(pattern = "failed|HTTP", x = ., ignore.case = FALSE, value = TRUE) %>%
@@ -456,7 +467,8 @@ TADA_DataRetrieval <- function(startDate = "null",
       stop("No monitoring sites were returned within your area of interest (no data available).")
     }
 
-    quiet_bbox_sites <- quiet_whatWQPsites(
+    quiet_bbox_sites <- attempt_data_retrieval(
+      quiet_whatWQPsites,
       siteid = bbox_avail$MonitoringLocationIdentifier
     )
 
@@ -559,7 +571,8 @@ TADA_DataRetrieval <- function(startDate = "null",
           dplyr::select(-geometry)
 
         # Get project metadata
-        quiet_projects.DR <- quiet_readWQPdata(
+        quiet_projects.DR <- attempt_data_retrieval(
+          quiet_readWQPdata,
           siteid = clipped_site_ids,
           WQPquery,
           ignore_attributes = TRUE,
@@ -609,7 +622,8 @@ TADA_DataRetrieval <- function(startDate = "null",
 
       # Get results
       results.DR <- suppressMessages(
-        dataRetrieval::readWQPdata(
+        attempt_data_retrieval(
+          dataRetrieval::readWQPdata,
           siteid = clipped_site_ids,
           WQPquery,
           dataProfile = "resultPhysChem",
@@ -633,7 +647,8 @@ TADA_DataRetrieval <- function(startDate = "null",
           dplyr::select(-geometry)
 
         # Get project metadata
-        quiet_projects.DR <- quiet_readWQPdata(
+        quiet_projects.DR <- attempt_data_retrieval(
+          quiet_readWQPdata,
           siteid = clipped_site_ids,
           WQPquery,
           ignore_attributes = TRUE,
@@ -794,8 +809,10 @@ TADA_DataRetrieval <- function(startDate = "null",
     # Query info on available data
     message("Checking what data is available. This may take a moment.")
 
-    # Don't want to print every message that's returned by WQP
-    quiet_query_avail <- quiet_whatWQPdata(WQPquery)
+    quiet_query_avail <- attempt_data_retrieval(
+      quiet_whatWQPdata,
+      WQPquery
+    )
 
     if (is.null(quiet_query_avail$result)) {
       stop_message <- quiet_query_avail$messages %>%
@@ -851,7 +868,10 @@ TADA_DataRetrieval <- function(startDate = "null",
       gc()
 
       # Get site metadata
-      quiet_sites.DR <- quiet_whatWQPsites(siteid = unique(results.DR$MonitoringLocationIdentifier))
+      quiet_sites.DR <- attempt_data_retrieval(
+        quiet_whatWQPsites,
+        siteid = unique(results.DR$MonitoringLocationIdentifier)
+      )
 
       if (is.null(quiet_sites.DR$result)) {
         stop_message <- quiet_sites.DR$messages %>%
@@ -868,7 +888,8 @@ TADA_DataRetrieval <- function(startDate = "null",
       sites.DR <- quiet_sites.DR$result
 
       # Get project metadata
-      quiet_projects.DR <- quiet_readWQPdata(
+      quiet_projects.DR <- attempt_data_retrieval(
+        quiet_readWQPdata,
         siteid = unique(results.DR$MonitoringLocationIdentifier),
         WQPquery,
         ignore_attributes = TRUE,
@@ -915,7 +936,9 @@ TADA_DataRetrieval <- function(startDate = "null",
       print("Downloading WQP query results. This may take some time depending upon the query size.")
       print(WQPquery)
       results.DR <- suppressMessages(
-        dataRetrieval::readWQPdata(WQPquery,
+        attempt_data_retrieval(
+          dataRetrieval::readWQPdata,
+          WQPquery,
           dataProfile = "resultPhysChem",
           ignore_attributes = TRUE
         )
@@ -926,10 +949,17 @@ TADA_DataRetrieval <- function(startDate = "null",
         print("Returning empty results dataframe: Your WQP query returned no results (no data available). Try a different query. Removing some of your query filters OR broadening your search area may help.")
         TADAprofile.clean <- results.DR
       } else {
-        sites.DR <- suppressMessages(dataRetrieval::whatWQPsites(WQPquery))
+        sites.DR <- suppressMessages(
+          attempt_data_retrieval(
+            dataRetrieval::whatWQPsites,
+            WQPquery
+          )
+        )
 
         projects.DR <- suppressMessages(
-          dataRetrieval::readWQPdata(WQPquery,
+          attempt_data_retrieval(
+            dataRetrieval::readWQPdata,
+            WQPquery,
             ignore_attributes = TRUE,
             service = "Project"
           )

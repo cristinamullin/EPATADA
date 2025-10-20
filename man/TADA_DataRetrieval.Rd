@@ -25,7 +25,8 @@ TADA_DataRetrieval(
   bBox = "null",
   maxrecs = 350000,
   ask = TRUE,
-  applyautoclean = TRUE
+  applyautoclean = TRUE,
+  max_attempts = 3
 )
 }
 \arguments{
@@ -98,9 +99,12 @@ downloads begin. Defaults to TRUE.}
 
 \item{applyautoclean}{Logical, defaults to TRUE. Applies TADA_AutoClean function on the returned
 data profile. Suggest switching to FALSE for queries that are expected to be large.}
+
+\item{max_attempts}{Numeric. Specifies the maximum number of attempts to
+retrieve data if an error occurs. Default is 3.}
 }
 \value{
-TADA-compatible dataframe
+TADA-compatible dataframe, or an empty data frame if data retrieval fails after the specified number of attempts.
 }
 \description{
 Retrieve data from Water Quality Portal (WQP) and generate a TADA-compatible
