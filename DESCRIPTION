@@ -44,25 +44,23 @@ Copyright: This software is in the public domain because it contains materials
     that originally came from the U.S. Environmental Protection Agency.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     plyr, 
     data.table, 
-    dplyr,
+    dplyr (>= 1.1.0),
     tidyr,
     tidyselect,
     purrr,
     grDevices,
-    magrittr,
     stringr,
     stringi,
     utils, 
     stats, 
-    lubridate, 
+    lubridate (>= 1.5.0), 
     ggplot2, 
     sf,
     leaflet,
-    leaflet.extras,
     plotly,
     urltools,
     geojsonsf,
@@ -70,42 +68,51 @@ Imports:
     rlang,
     nhdplusTools,
     arcgislayers,
-    httr,
     MESS,
     units,
     igraph,
     jsonlite, 
     openxlsx,
     DT,
+    dataRetrieval (>= 2.7.21),
     dbscan,
-    janitor,
     rExpertQuery,
-    dataRetrieval
+    readr (>= 1.4.0),
+    spsUtil,
+    httr,
+    leaflegend,
+    usethis
 Depends: 
-    R (>= 3.5.0)
+    R (>= 4.1.0)
 Suggests:
+    curl (>= 7.0.0),
+    xml2,
+    whisker,
     hydroloom,
     lwgeom,
     RColorBrewer,
     rmarkdown,
-    readr,
-    tidyverse,
     knitr,
     testthat,
     testthis,
+    devtools,
     pkgdown,
     spelling,
     htmltools,
+    htmlwidgets,
     tigris,
     yaml,
     rvest,
     remotes,
-    devtools,
-    usethis
+    covr,
+    here,
+    Polychrome,
+    httr2 (>= 1.2.1),
+    roxygen2
 Remotes:
-    USEPA/rExpertQuery@develop,
-    DOI-USGS/dataRetrieval@develop
+    USEPA/rExpertQuery@develop
 VignetteBuilder: knitr, rmarkdown
+BuildVignettes: true
 Language: en-US
 Config/testthat/edition: 3
 Config/testthat/load-all: list(export_all = FALSE, helpers = FALSE)
@@ -113,3 +120,4 @@ URL: https://usepa.github.io/EPATADA/, https://github.com/USEPA/EPATADA
 LazyData: true
 LazyDataCompression: xz
 Config/Needs/website: rmarkdown
+BugReports: https://github.com/USEPA/EPATADA/issues

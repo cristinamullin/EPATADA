@@ -27,3 +27,10 @@ testing_log.txt
 # built and rendered vignettes aren't tracked
 inst/doc
 vignettes/*.R
+
+# development
+R/dev/mod2/
+R/dev/ExampleWorkflow/
+
+# temporarily remove vignette (pending updates to NHD functions)
+vignettes/GeospatialDataIntegration.Rmd

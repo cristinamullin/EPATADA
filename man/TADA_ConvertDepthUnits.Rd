@@ -27,7 +27,7 @@ of original columns, with unit synonyms addressed (e.g. "meters" is converted
 automatically to "m" for national consistency).
 }
 \description{
-#'The \strong{TADA_ConvertDepthUnits} function converts depth units to a consistent
+The \strong{TADA_ConvertDepthUnits} function converts depth units to a consistent
 unit. Depth values and units are most commonly associated with lake
 data, and are populated in the \emph{ActivityDepthHeightMeasure},
 \emph{ActivityTopDepthHeightMeasure}, \emph{ActivityBottomDepthHeightMeasure}, and
@@ -59,7 +59,7 @@ unit = "m".
 }
 \examples{
 # Load example dataset:
-data(Data_Nutrients_UT)
+utils::data(Data_Nutrients_UT)
 
 # Convert all depth units to meters and review unit harmonization:
 # "ActivityDepthHeightMeasure.MeasureUnitCode" and

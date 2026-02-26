@@ -7,9 +7,6 @@
 \format{
 A dataframe with 134050 rows and 149 variables
 }
-\usage{
-data(Data_6Tribes_5y)
-}
 \description{
 Original pull:
 Data_6Tribes_5y <- TADA_DataRetrieval(organization = c("REDLAKE_WQX",
@@ -19,7 +16,8 @@ Data_6Tribes_5y <- TADA_DataRetrieval(organization = c("REDLAKE_WQX",
 "PUEBLOOFTESUQUE",
 "CNENVSER"),
 startDate = "2018-01-01"
-endDate = "2023-01-01")
+endDate = "2023-01-01",
+ask = FALSE)
 }
 \details{
 This example includes monitoring data collected from Jan 2018 to present

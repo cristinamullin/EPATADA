@@ -1,11 +1,11 @@
 ---
-title: "TADA Module 1: Training for Intermediate/Advanced R Users"
-format: html
-editor: visual
+title: 'TADA Module 1: Training for Intermediate/Advanced R Users'
+always_allow_html: yes
 author: "TADA Team"
 date: "`r Sys.Date()`"
-output: 
+output:
   rmarkdown::html_vignette:
+    self_contained: false
     toc: true
     fig_caption: yes
     fig_height: 8
@@ -14,6 +14,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteIndexEntry{TADA Module 1: Training for Intermediate/Advanced R Users}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteDepends{EPATADA}
 description: A foray into major TADA Module 1 functions for users familiar with R and RStudio.
 editor_options:
   chunk_output_type: console
@@ -21,25 +22,28 @@ editor_options:
     wrap: 72
 ---
 
-```{r knitr, include = FALSE}
+```{r setup, include = F}
 library(knitr)
 
 knitr::opts_chunk$set(
+  fig.width = 7, 
+  fig.height = 4, 
+  dpi = 96, 
   echo = TRUE,
+  out.width = "80%",
   warning = FALSE,
-  message = FALSE,
-  eval = F
+  message = FALSE
 )
 ```
 
-```{css, echo = F}
+```{css, include = F}
 pre {
   max-height: 300px;
   overflow-y: auto;
 }
 
 pre[class] {
-  max-height: 100px;
+  max-height: 300px;
 }
 ```
 
@@ -53,12 +57,13 @@ document ([learn more about
 RMarkdown](https://bookdown.org/yihui/rmarkdown/)) walks through how to
 download the TADA R package from GitHub, access and parameterize several
 important functions with a sample dataframe, and create basic
-visualizations. The workflow is similar to a funnel: at each decision
-point, data that fail QC checks are removed from the core dataframe and
-placed in a separate dataframe, while data that pass are carried into
-the next step. At the end of the QC checks, the user should be confident
-that their data are properly documented and applicable to the analysis
-at hand.
+visualizations.
+
+The workflow is similar to a funnel: at each decision point, data that
+fail QC checks are removed from the core dataframe and placed in a
+separate dataframe, while data that pass are carried into the next step.
+At the end of the QC checks, the user should be confident that their
+data are properly documented and applicable to the analysis at hand.
 
 **Note: TADA is still under development. New functionality is added
 weekly, and sometimes we need to make bug fixes in response to tester
@@ -82,69 +87,38 @@ encourages input and development from users. Check out the
 [Contributing](https://usepa.github.io/EPATADA/articles/CONTRIBUTING.html)
 page on the TADA GitHub site for guidance on collaboration conventions.
 
-## Install and setup
+## Install and load packages
 
-Users can install the TADA package from GitHub into their R library
-using the `remotes` package. Copy and paste the code below into your R
-or RStudio console to download and install.
+First, install and load the remotes package specifying the repo. This is
+needed before installing EPATADA because it is only available on GitHub
+(not CRAN).
 
 ```{r install_remotes, results = 'hide', eval = F}
-if (!"remotes" %in% installed.packages()) {
-  install.packages("remotes")
-}
-
+install.packages("remotes",
+  repos = "http://cran.us.r-project.org"
+)
 library(remotes)
 ```
 
-TADA package relies on other packages, therefore you may be prompted in
-the console to update dependency packages that have more recent versions
-available. If you see this prompt, it is recommended to update all of
-them (enter 1 into the console).
-
-The most stable branch for TADA right now is the develop branch.
-Contributors generally create their own branches based on develop, make
-some improvements, and then submit a pull request to be reviewed by the
-TADA Team. Once approved, updates are then merged into the develop
-branch. However, you are welcome to download any branch you'd like using
-the `ref` input in `install_github` (see code chunk below). This
-functionality is mainly only useful to TADA package
-developers/contributors.
-
-```{r install_TADA_dev, include = F}
-# helps with development (knit and checks), this chunk should not appear on the pkgdown website
-remotes::install_github("USEPA/EPATADA",
-  ref = "develop",
-  dependencies = TRUE
-)
-```
+Next, install and load EPATADA using the remotes package. USGS's
+dataRetrieval and other TADA R Package dependencies will also be
+downloaded automatically from CRAN with the TADA install. If desired,
+the development version of dataRetrieval can be downloaded directly from
+GitHub (un-comment).
 
 ```{r install_TADA, eval = F, results = 'hide'}
 remotes::install_github("USEPA/EPATADA",
   ref = "develop",
   dependencies = TRUE
 )
+# remotes::install_github("USGS-R/dataRetrieval", dependencies=TRUE)
 ```
 
-Use the **library()** function to load the TADA R Package into your R
-session.
+Finally, use the **library()** function to load the TADA R Package into
+your R session.
 
 ```{r library, results = 'hide'}
 library(EPATADA)
-```
-
-It's that easy!
-
-The following code block ensures the additional packages needed to run
-the code in this RMarkdown document are loaded. However, users may also
-use the `package name:: package function` notation to avoid the list of
-`library()` calls.
-
-```{r setup, eval = F, results = 'hide'}
-if (!"tidyverse" %in% installed.packages()) {
-  install.packages("tidyverse")
-}
-
-library(tidyverse)
 ```
 
 ## Help pages
@@ -173,14 +147,18 @@ WQP profiles.
 
 If you are interested in reviewing the column headers and formats
 required to run TADA, use the function below, which saves an example
-spreadsheet to the user's working directory. You can also take a look at
-an example dataframe, like `Data_Nutrients_UT` to get an idea of the
-data structure and format.
+spreadsheet to the user's working directory.
 
-```{r template}
+```{r template, eval = F}
 getwd() # find your working directory
 template <- TADA_GetTemplate() # download template to working directory
+```
 
+You can also take a look at an example dataframe, like
+`Data_Nutrients_UT` to get an idea of the data structure and format.
+
+```{r UT example data}
+utils::data(Data_Nutrients_UT)
 # review example dataframe
 exampledata_Nutrients_UT <- Data_Nutrients_UT
 ```
@@ -245,10 +223,10 @@ profiles. Once released (coming in 2025), one data profile will contain
 the columns critical to TADA, removing the need to combine profiles in
 this first step. This will simplify the steps needed to upload a custom
 or WQP GUI-downloaded dataframe into the R package. However, column
-names are changing in the new WQP 3.0 data profiles. This may impact
-TADA package users usage of the `TADA_DataRetrieval` function in their
-workflows. The WQP and TADA teams are available to assist with cross
-walking the old to new column names when the time comes.
+names are changing in the new WQP 3.0 data profiles. This will impact
+the `TADA_DataRetrieval` function. The WQP and TADA teams are available
+to assist with cross walking the old to new column names when the time
+comes.
 
 ## Initial data review
 
@@ -320,8 +298,8 @@ ensure that we remove all non-water data first.
 
 ```{r media type}
 # remove data with media type that is not water
-removed <- dataset_0 %>%
-  dplyr::filter(!TADA.ActivityMediaName %in% c("WATER")) %>%
+removed <- dataset_0 |>
+  dplyr::filter(!TADA.ActivityMediaName %in% c("WATER")) |>
   dplyr::mutate(TADA.RemovalReason = "Activity media is not water.")
 
 # what other media types exist in dataframe?
@@ -330,7 +308,7 @@ unique(removed$TADA.ActivityMediaName)
 
 ```{r water only}
 # clean dataframe containing only water
-dataset <- dataset_0 %>% dplyr::filter(TADA.ActivityMediaName %in% c("WATER"))
+dataset <- dataset_0 |> dplyr::filter(TADA.ActivityMediaName %in% c("WATER"))
 
 dimCheck(all_result_num, dataset, removed, checkName = "Activity Media")
 ```
@@ -381,21 +359,21 @@ remove problematic detection limit data before proceeding. We can also
 filter for the "problem" data by TADA.CensoredData.Flag and review the
 unique reasons for data removal.
 
-```{r id cens data}
+```{r id cens data, results='hide'}
 dataset <- TADA_IDCensoredData(dataset)
 
 TADA_FieldValuesPie(dataset, field = "TADA.CensoredData.Flag")
 
-problem_censored <- dataset %>%
-  dplyr::filter(!TADA.CensoredData.Flag %in% c("Non-Detect", "Over-Detect", "Other", "Uncensored")) %>%
+problem_censored <- dataset |>
+  dplyr::filter(!TADA.CensoredData.Flag %in% c("Non-Detect", "Over-Detect", "Other", "Uncensored")) |>
   dplyr::mutate(TADA.RemovalReason = "Detection limit information contains errors or missing information.")
 
 # Let's take a look at the problematic data that we filtered out (if any)
 check <- unique(problem_censored[, c("TADA.CharacteristicName", "ResultDetectionConditionText", "DetectionQuantitationLimitTypeName", "TADA.CensoredData.Flag")])
 
-check
+TADA_TableExport(check)
 
-dataset <- dataset %>% dplyr::filter(TADA.CensoredData.Flag %in% c("Non-Detect", "Over-Detect", "Other", "Uncensored"))
+dataset <- dataset |> dplyr::filter(TADA.CensoredData.Flag %in% c("Non-Detect", "Over-Detect", "Other", "Uncensored"))
 
 # Let's take a look at the removed data
 removed <- plyr::rbind.fill(removed, problem_censored)
@@ -420,14 +398,14 @@ na_rv_datatypes <- unique(subset(dataset, is.na(dataset$TADA.ResultMeasureValue)
 
 ```{r incompatible data types}
 # these are all of the NOT allowable data types in the dataset.
-incompatible_datatype <- dataset %>%
-  dplyr::filter(!dataset$TADA.ResultMeasureValueDataTypes.Flag %in% c("Numeric", "Less Than", "Greater Than", "Approximate Value", "Percentage", "Comma-Separated Numeric", "Numeric Range - Averaged", "Result Value/Unit Copied from Detection Limit")) %>%
+incompatible_datatype <- dataset |>
+  dplyr::filter(!dataset$TADA.ResultMeasureValueDataTypes.Flag %in% c("Numeric", "Less Than", "Greater Than", "Approximate Value", "Percentage", "Comma-Separated Numeric", "Numeric Range - Averaged", "Result Value/Unit Copied from Detection Limit")) |>
   dplyr::mutate(TADA.RemovalReason = "Result value type cannot be converted to numeric or no detection limit values provided.")
 
 # take a look at the difficult data types - do they make sense?
 check <- unique(incompatible_datatype[, c("TADA.CharacteristicName", "ResultMeasureValue", "TADA.ResultMeasureValue", "ResultMeasure.MeasureUnitCode", "TADA.ResultMeasure.MeasureUnitCode", "TADA.ResultMeasureValueDataTypes.Flag", "DetectionQuantitationLimitMeasure.MeasureValue", "TADA.DetectionQuantitationLimitMeasure.MeasureValue", "DetectionQuantitationLimitMeasure.MeasureUnitCode", "TADA.DetectionQuantitationLimitMeasure.MeasureUnitCode")])
 
-check
+TADA_TableExport(check)
 ```
 
 Then we can take a closer look at the removed results and run another
@@ -435,7 +413,7 @@ dimension check on the data set.
 
 ```{r allowable data types}
 # filter data set to include allowable data types
-dataset <- dataset %>% dplyr::filter(dataset$TADA.ResultMeasureValueDataTypes.Flag %in% c("Numeric", "Less Than", "Greater Than", "Approximate Value", "Percentage", "Comma-Separated Numeric", "Numeric Range - Averaged", "Result Value/Unit Copied from Detection Limit"))
+dataset <- dataset |> dplyr::filter(dataset$TADA.ResultMeasureValueDataTypes.Flag %in% c("Numeric", "Less Than", "Greater Than", "Approximate Value", "Percentage", "Comma-Separated Numeric", "Numeric Range - Averaged", "Result Value/Unit Copied from Detection Limit"))
 
 # create dataframe to includ all removed results
 removed <- plyr::rbind.fill(removed, incompatible_datatype)
@@ -469,10 +447,11 @@ the following command:
 ```{r qaqc}
 qaqc_ref <- TADA_GetWQXCharValRef()
 
-unique(qaqc_ref$Type)
+unique(qaqc_ref[["Type"]])
 ```
 
-**Question 5: What do you think the `qaqc_ref$Type` column indicates?**
+**Question 5: What do you think the Type column in the qaqc_ref data
+frame indicates?**
 
 TADA joins this validation table to the data and uses the "Pass" and
 "Suspect" labels in the TADA.WQXVal.Flag column to create easily
@@ -514,11 +493,11 @@ advance!**
 
 ```{r flags}
 # grab all the flagged results from the four functions
-problem_flagged <- dataset_flags %>%
-  dplyr::filter(TADA.SampleFraction.Flag == "Suspect" | TADA.MethodSpeciation.Flag == "Suspect" | TADA.ResultUnit.Flag == "Suspect" | !TADA.ActivityType.Flag %in% ("Non_QC")) %>%
+problem_flagged <- dataset_flags |>
+  dplyr::filter(TADA.SampleFraction.Flag == "Suspect" | TADA.MethodSpeciation.Flag == "Suspect" | TADA.ResultUnit.Flag == "Suspect" | !TADA.ActivityType.Flag %in% ("Non_QC")) |>
   dplyr::mutate(TADA.RemovalReason = "Invalid Unit, Method, Speciation, or Activity Type.")
 
-dataset_flags <- dataset_flags %>% dplyr::filter(!ResultIdentifier %in% problem_flagged$ResultIdentifier)
+dataset_flags <- dataset_flags |> dplyr::filter(!ResultIdentifier %in% problem_flagged$ResultIdentifier)
 
 # create dataframe of removed results
 removed <- plyr::rbind.fill(removed, problem_flagged)
@@ -644,9 +623,9 @@ functions and pipes.
 
 ```{r cens summary}
 # get table of characteristics with number of results, sites, and organizations
-dataset_cens_summary <- dataset_cens %>%
-  dplyr::group_by(TADA.CharacteristicName) %>%
-  dplyr::summarise(Result_Count = length(ResultIdentifier), Site_Count = length(unique(TADA.MonitoringLocationIdentifier)), Org_Count = length(unique(OrganizationIdentifier))) %>%
+dataset_cens_summary <- dataset_cens |>
+  dplyr::group_by(TADA.CharacteristicName) |>
+  dplyr::summarise(Result_Count = length(ResultIdentifier), Site_Count = length(unique(TADA.MonitoringLocationIdentifier)), Org_Count = length(unique(OrganizationIdentifier))) |>
   dplyr::arrange(desc(Result_Count))
 ```
 
@@ -803,6 +782,5 @@ remotes::install_github("USEPA/TADAShiny", ref = "develop", dependencies = TRUE)
 TADAShiny::run_app()
 ```
 
-DRAFT [Module 1](https://rconnect-public.epa.gov/TADAShiny/) is also
-currently hosted on the web with minimal server memory/storage
-allocated.
+The [TADA Module 1 R Shiny App](https://rconnect-public.epa.gov/TADAShiny/) is 
+also currently hosted on the web.

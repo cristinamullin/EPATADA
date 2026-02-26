@@ -24,7 +24,7 @@
 #' # Create a single boxplot using defaults. The input dataframe in this example
 #' # includes only one unique TADA.ComparableDataIdentifier:
 #' # Load example dataframe:
-#' data(Data_6Tribes_5y_Harmonized)
+#' utils::data(Data_6Tribes_5y_Harmonized)
 #' # Filter data down to a single TADA.ComparableDataIdentifier
 #' df <- dplyr::filter(
 #'   Data_6Tribes_5y_Harmonized,
@@ -50,7 +50,7 @@
 #' # by both the TADA.ComparableDataIdentifier and the MonitoringLocationTypeName
 #' # (e.g. stream, reservoir, canal, etc.)
 #' # Load example dataframe:
-#' data(Data_Nutrients_UT)
+#' utils::data(Data_Nutrients_UT)
 #' Boxplot_output <- TADA_Boxplot(Data_Nutrients_UT,
 #'   id_cols = c("TADA.ComparableDataIdentifier", "MonitoringLocationTypeName")
 #' )
@@ -60,25 +60,22 @@
 #' Boxplot_output[[30]]
 #'
 TADA_Boxplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
-  # check .data is data.frame
-  TADA_CheckType(.data, "data.frame", "Input object")
-
   # ensure comparable data identifier is in the id_cols vector
   if (is.null(id_cols)) {
     id_cols <- "TADA.ComparableDataIdentifier"
   }
   if (!"TADA.ComparableDataIdentifier" %in% id_cols) {
-    warning("TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended: plotting without it may produce errors in the plot.")
+    warning(
+      "TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended: plotting without it may produce errors in the plot."
+    )
   }
 
-  # check .data has required columns
-  TADA_CheckColumns(.data, id_cols)
-
-  # check .data has required columns
-  TADA_CheckColumns(.data, c(
-    "TADA.ResultMeasureValue",
-    "TADA.ResultMeasure.MeasureUnitCode"
-  ))
+  # check .data is data.frame and has required columns (including id_cols)
+  expected_cols <- c(
+    id_cols,
+    c("TADA.ResultMeasureValue", "TADA.ResultMeasure.MeasureUnitCode")
+  )
+  TADA_CheckColumns(.data, expected_cols)
 
   # load TADA color palette
 
@@ -92,18 +89,25 @@ TADA_Boxplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
 
   if (!start == end) {
     net <- start - end
-    print(paste0("Plotting function removed ", net, " results where TADA.ResultMeasureValue = NA. These results cannot be plotted."))
+    print(paste0(
+      "Plotting function removed ",
+      net,
+      " results where TADA.ResultMeasureValue = NA. These results cannot be plotted."
+    ))
   }
 
-  .data <- .data %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) %>%
+  .data <- .data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) |>
     dplyr::mutate(Group = dplyr::cur_group_id())
 
   boxplots <- list()
 
   for (i in 1:max(.data$Group)) {
     plot.data <- subset(.data, .data$Group == i)
-    groupid <- TADA_CharStringRemoveNA(paste0(unique(plot.data[, id_cols]), collapse = " "))
+    groupid <- TADA_CharStringRemoveNA(paste0(
+      unique(plot.data[, id_cols]),
+      collapse = " "
+    ))
 
     # units
     unit <- unique(plot.data$TADA.ResultMeasure.MeasureUnitCode)
@@ -143,38 +147,43 @@ TADA_Boxplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
     }
 
     base_boxplot <- plotly::plot_ly(
-      y = list(values), type = "box", fillcolor = tada.pal[1, 1],
-      q1 = quant_25, median = box_median,
-      q3 = quant_75, lowerfence = box_lower,
+      y = list(values),
+      type = "box",
+      fillcolor = tada.pal[1, 1],
+      q1 = quant_25,
+      median = box_median,
+      q3 = quant_75,
+      lowerfence = box_lower,
       hoverinfo = "y",
-      upperfence = box_upper, boxpoints = "outliers",
+      upperfence = box_upper,
+      boxpoints = "outliers",
       marker = list(color = tada.pal[1, 1]),
       stroke = I(tada.pal[1, 2])
     )
 
     # figure margin
-    mrg <- list(
-      l = 50, r = 20,
-      b = 20, t = 55,
-      pad = 0
-    )
+    mrg <- list(l = 50, r = 20, b = 20, t = 55, pad = 0)
 
     # boxplot layout and labels
-    base_boxplot <- base_boxplot %>%
+    base_boxplot <- base_boxplot |>
       plotly::layout(
         xaxis = list(showticklabels = FALSE),
         yaxis = list(
-          title = unit, titlefont = list(size = 16, family = "Arial"), tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          title = unit,
+          titlefont = list(size = 16, family = "Arial"),
+          tickfont = list(size = 16, family = "Arial"),
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         hoverlabel = list(bgcolor = "white"),
         title = paste0("Boxplot of \n", groupid),
         plot_bgcolor = "#e5ecf6",
         margin = mrg
-      ) %>%
+      ) |>
       plotly::config(displayModeBar = FALSE)
-
 
     # create boxplot for all groupid's
     boxplots[[i]] <- base_boxplot
@@ -212,7 +221,7 @@ TADA_Boxplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
 #'
 #' @examples
 #' # Load example dataframe:
-#' data(Data_6Tribes_5y_Harmonized)
+#' utils::data(Data_6Tribes_5y_Harmonized)
 #'
 #' # Create a histogram for each comparable data group (TADA.ComparableDataIdentifier)
 #' # in the input dataframe:
@@ -231,7 +240,7 @@ TADA_Boxplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
 #' # plot in list. In this example, we will group by both TADA.ComparableDataIdentifier
 #' # and MonitoringLocationTypeName (e.g. stream, reservoir, canal, etc.)
 #' # Load example dataframe:
-#' data(Data_Nutrients_UT)
+#' utils::data(Data_Nutrients_UT)
 #' Histogram_output <- TADA_Histogram(Data_Nutrients_UT,
 #'   id_cols = c(
 #'     "TADA.ComparableDataIdentifier",
@@ -243,26 +252,26 @@ TADA_Boxplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
 #' Histogram_output[[25]]
 #' Histogram_output[[30]]
 #'
-TADA_Histogram <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
-  # check .data is data.frame
-  TADA_CheckType(.data, "data.frame", "Input object")
-
+TADA_Histogram <- function(
+  .data,
+  id_cols = c("TADA.ComparableDataIdentifier")
+) {
   # ensure comparable data identifier is in the id_cols vector
   if (is.null(id_cols)) {
     id_cols <- "TADA.ComparableDataIdentifier"
   }
   if (!"TADA.ComparableDataIdentifier" %in% id_cols) {
-    warning("TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended: plotting without it may produce errors in the plot.")
+    warning(
+      "TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended: plotting without it may produce errors in the plot."
+    )
   }
 
-  # check .data has required columns
-  TADA_CheckColumns(.data, id_cols)
-
-  # check .data has required columns
-  TADA_CheckColumns(.data, c(
-    "TADA.ResultMeasureValue",
-    "TADA.ResultMeasure.MeasureUnitCode"
-  ))
+  # check .data is data.frame and has required columns (including id_cols)
+  expected_cols <- c(
+    id_cols,
+    c("TADA.ResultMeasureValue", "TADA.ResultMeasure.MeasureUnitCode")
+  )
+  TADA_CheckColumns(.data, expected_cols)
 
   tada.pal <- TADA_ColorPalette(col_pair = TRUE)
 
@@ -274,18 +283,25 @@ TADA_Histogram <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) 
 
   if (!start == end) {
     net <- start - end
-    print(paste0("Plotting function removed ", net, " results where TADA.ResultMeasureValue = NA. These results cannot be plotted."))
+    print(paste0(
+      "Plotting function removed ",
+      net,
+      " results where TADA.ResultMeasureValue = NA. These results cannot be plotted."
+    ))
   }
 
-  .data <- .data %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) %>%
+  .data <- .data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) |>
     dplyr::mutate(Group = dplyr::cur_group_id())
 
   histograms <- list()
 
   for (i in 1:max(.data$Group)) {
     plot.data <- subset(.data, .data$Group == i)
-    groupid <- TADA_CharStringRemoveNA(paste0(unique(plot.data[, id_cols]), collapse = " "))
+    groupid <- TADA_CharStringRemoveNA(paste0(
+      unique(plot.data[, id_cols]),
+      collapse = " "
+    ))
 
     # units
     unit <- unique(plot.data$TADA.ResultMeasure.MeasureUnitCode)
@@ -313,9 +329,13 @@ TADA_Histogram <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) 
       box_lower_row <- which(values == min(values[values >= lower_thresh]))
       box_lower <- values[[box_lower_row[[1]]]]
     }
-    no_outliers <- subset(plot.data, plot.data$TADA.ResultMeasureValue >= box_lower & plot.data$TADA.ResultMeasureValue <= box_upper)
+    no_outliers <- subset(
+      plot.data,
+      plot.data$TADA.ResultMeasureValue >= box_lower &
+        plot.data$TADA.ResultMeasureValue <= box_upper
+    )
 
-    histogram <- plotly::plot_ly() %>%
+    histogram <- plotly::plot_ly() |>
       plotly::add_histogram(
         x = plot.data$TADA.ResultMeasureValue,
         xbins = list(start = min(plot.data$TADA.ResultMeasureValue)),
@@ -325,46 +345,61 @@ TADA_Histogram <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) 
         name = "<b>All Data<b>"
       )
     if (dim(no_outliers)[1] > 0) {
-      histogram <- histogram %>%
+      histogram <- histogram |>
         plotly::add_histogram(
           x = no_outliers$TADA.ResultMeasureValue,
           xbins = list(start = min(plot.data$TADA.ResultMeasureValue)),
           marker = list(color = tada.pal[1, 1]),
           stroke = I(tada.pal[1, 2]),
           bingroup = 1,
-          name = paste0("<b>Outliers Removed</b>", "\nUpper Threshold: ", box_upper, "\nLower Threshold: ", box_lower),
+          name = paste0(
+            "<b>Outliers Removed</b>",
+            "\nUpper Threshold: ",
+            box_upper,
+            "\nLower Threshold: ",
+            box_lower
+          ),
           visible = "legendonly"
         )
     }
 
-    mrg <- list(
-      l = 50, r = 20,
-      b = 20, t = 55,
-      pad = 0
-    )
+    mrg <- list(l = 50, r = 20, b = 20, t = 55, pad = 0)
 
     # histogram layout and labels
-    histogram <- histogram %>%
+    histogram <- histogram |>
       plotly::layout(
         xaxis = list(
-          title = unit, titlefont = list(size = 16, family = "Arial"), tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          title = unit,
+          titlefont = list(size = 16, family = "Arial"),
+          tickfont = list(size = 16, family = "Arial"),
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         yaxis = list(
-          title = y_label, titlefont = list(size = 16, family = "Arial"), tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          title = y_label,
+          titlefont = list(size = 16, family = "Arial"),
+          tickfont = list(size = 16, family = "Arial"),
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         hoverlabel = list(bgcolor = "white"),
         title = paste0("Histogram of \n", groupid),
         plot_bgcolor = "#e5ecf6",
         barmode = "overlay",
-        legend = list(title = list(text = "<b>Select 'Outliers Removed' \nand Deselect 'All Data' \nto View a Subset of the Data<b>")),
+        legend = list(
+          title = list(
+            text = "<b>Select 'Outliers Removed' \nand Deselect 'All Data' \nto View a Subset of the Data<b>"
+          )
+        ),
         margin = mrg
-      ) %>%
+      ) |>
       plotly::config(displayModeBar = TRUE)
-
 
     histograms[[i]] <- histogram
 
@@ -376,357 +411,6 @@ TADA_Histogram <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) 
   }
 
   return(histograms)
-}
-
-
-#' Create Overview Map
-#'
-#' @param .data TADA dataframe containing the data downloaded from the WQP, where
-#' each row represents a unique data record. Dataframe must include the columns
-#' 'MonitoringLocationIdentifier','MonitoringLocationName','TADA.LatitudeMeasure',
-#' 'TADA.LongitudeMeasure', 'ResultIdentifier', 'ActivityStartDate', 'TADA.CharacteristicName',
-#' and 'OrganizationIdentifier' to run this function.
-#'
-#' @return A leaflet map that shows all sites in the dataframe, where larger point sizes
-#' indicate more results collected at a site, and darker point colors indicate more
-#' characteristics measured at that site. Users can click on points on the map to see
-#' a pop-up window with exact counts for measurements (i.e. number of rows),
-#' visits (number of unique Activity ID's), and characteristics associated with each site.
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Load example dataframe:
-#' data(Data_Nutrients_UT)
-#' data(Data_6Tribes_5y_Harmonized)
-#'
-#' # Create maps:
-#' TADA_OverviewMap(Data_Nutrients_UT)
-#' TADA_OverviewMap(Data_6Tribes_5y_Harmonized)
-#' }
-#'
-TADA_OverviewMap <- function(.data) {
-  suppressMessages(suppressWarnings({
-    quiet({
-      addLegendCustom <- function(map, colors, labels, sizes, opacity = 0.5) {
-        colorAdditions <- paste0(colors, "; border-radius: 50%; width:", sizes, "px; height:", sizes, "px")
-        labelAdditions <- paste0("<div style='display: inline-block;height: ", sizes, "px;margin-top: 4px;line-height: ", sizes, "px;'>", labels, "</div>")
-
-        return(leaflet::addLegend(map, colors = colorAdditions, labels = labelAdditions, opacity = opacity, title = "Measurements"))
-      }
-
-      sumdat <- .data %>%
-        dplyr::group_by(MonitoringLocationIdentifier, MonitoringLocationName, TADA.LatitudeMeasure, TADA.LongitudeMeasure) %>%
-        dplyr::summarise("Sample_Count" = length(unique(ResultIdentifier)), "Visit_Count" = length(unique(ActivityStartDate)), "Parameter_Count" = length(unique(TADA.CharacteristicName)), "Organization_Count" = length(unique(OrganizationIdentifier)))
-
-      param_counts <- sort(unique(sumdat$Parameter_Count))
-      param_length <- length(param_counts)
-      param_diff <- diff(param_counts)
-
-      pt_sizes <- round(stats::quantile(sumdat$Sample_Count, probs = c(0.1, 0.25, 0.5, 0.75)), 0)
-      pt_labels <- c(
-        paste0("<=", pt_sizes[1]),
-        paste0(">", pt_sizes[1]),
-        paste0(">", pt_sizes[2]),
-        paste0(">", pt_sizes[3]),
-        paste0(">", pt_sizes[4])
-      )
-
-      sumdat$radius <- 5
-      sumdat$radius <- ifelse(sumdat$Sample_Count > pt_sizes[1], 10, sumdat$radius)
-      sumdat$radius <- ifelse(sumdat$Sample_Count > pt_sizes[2], 15, sumdat$radius)
-      sumdat$radius <- ifelse(sumdat$Sample_Count > pt_sizes[3], 20, sumdat$radius)
-      sumdat$radius <- ifelse(sumdat$Sample_Count > pt_sizes[4], 30, sumdat$radius)
-
-      site_size <- data.frame(Sample_n = pt_labels, Point_size = c(5, 10, 15, 20, 30))
-
-      site_legend <- subset(site_size, site_size$Point_size %in% unique(sumdat$radius))
-
-      # set breaks to occur only at integers for data sets requiring bins
-      pretty.breaks <- unique(round(pretty(sumdat$Parameter_Count)))
-
-      bins_n <- length(pretty.breaks)
-
-      # create TADA color palette
-      tada.pal <- TADA_ColorPalette()
-
-      start.rgb.val <- col2rgb(tada.pal[5]) / 255
-
-      new.rgb.start <- start.rgb.val * (1 - 0.7) + 1 * 0.7
-
-      start.color <- rgb(new.rgb.start[1], new.rgb.start[2], new.rgb.start[3])
-
-      end.rgb.val <- col2rgb(tada.pal[10]) / 255
-
-      new.rgb.end <- end.rgb.val * (1 - 0.4)
-
-      end.color <- rgb(new.rgb.end[1], new.rgb.end[2], new.rgb.end[3])
-
-      tada.blues <- grDevices::colorRampPalette(c(start.color, end.color))(bins_n)
-
-      # set color palette
-      # set color palette for small number of characteristics (even intervals, no bins)
-      if (length(unique(param_diff)) == 1 & param_length < 10) {
-        pal <- leaflet::colorFactor(
-          palette = tada.blues,
-          levels = param_counts
-        )
-      } else if (length(unique(param_counts)) == 1) {
-        pal <- "orange"
-      } else {
-        pal <- leaflet::colorBin(
-          palette = tada.blues,
-          bins = pretty.breaks
-        )
-      }
-
-      # create custom fill color function so that data sets with one value for parameter count are displayed correctly
-      customFillColor <- function(category, pal) {
-        if (length(param_diff > 0)) {
-          return(pal(category))
-        } else {
-          return(tada.pal[5])
-        }
-      }
-
-
-      # Tribal layers will load by default in the overview map, restricted by the bounding box of the current dataset
-      # They can be toggled on and off using a button (all layers work together and can't be turned on/off individually).
-      # Colors and icons are as discussed previously (orange/tan colors and open triangle icons for points) but can be changed to match HMW if desired.
-      bbox <- sf::st_bbox(
-        c(
-          xmin = min(sumdat$TADA.LongitudeMeasure),
-          ymin = min(sumdat$TADA.LatitudeMeasure),
-          xmax = max(sumdat$TADA.LongitudeMeasure),
-          ymax = max(sumdat$TADA.LatitudeMeasure)
-        ),
-        crs = sf::st_crs(sumdat)
-      )
-      vbbox <- bbox %>%
-        as.vector()
-
-      map <- leaflet::leaflet() %>%
-        leaflet::addProviderTiles("Esri.WorldTopoMap", group = "World topo", options = leaflet::providerTileOptions(updateWhenZooming = FALSE, updateWhenIdle = TRUE)) %>%
-        leaflet::clearShapes() %>% # get rid of whatever was there before if loading a second dataset
-        leaflet::fitBounds(lng1 = vbbox[1], lat1 = vbbox[2], lng2 = vbbox[3], lat2 = vbbox[4]) %>% # fit to bounds of data in tadat$raw
-        leaflet.extras::addResetMapButton() %>% # button to reset to initial zoom and lat/long
-        leaflet::addMapPane("featurelayers", zIndex = 300) %>%
-        leaflet::addCircleMarkers(
-          data = sumdat,
-          lng = ~TADA.LongitudeMeasure,
-          lat = ~TADA.LatitudeMeasure,
-          # sets color of monitoring site circles
-          color = as.character(tada.pal[10]),
-          fillColor = customFillColor(sumdat$Parameter_Count, pal),
-          fillOpacity = 0.7,
-          stroke = TRUE,
-          weight = 1.5,
-          radius = sumdat$radius,
-          popup = paste0(
-            "Site ID: ", sumdat$MonitoringLocationIdentifier,
-            "<br> Site Name: ", sumdat$MonitoringLocationName,
-            "<br> Measurement Count: ", sumdat$Sample_Count,
-            "<br> Visit Count: ", sumdat$Visit_Count,
-            "<br> Characteristic Count: ", sumdat$Parameter_Count
-          )
-        ) %>%
-        addLegendCustom(
-          colors = "black",
-          labels = site_legend$Sample_n, sizes = site_legend$Point_size * 2
-        )
-
-      # create conditional map legend
-      # create legend for single parameter count value data sets
-      if (length(param_diff) == 0) {
-        map <- map %>% leaflet::addLegend("bottomright",
-          color = tada.pal[5], labels = param_counts,
-          title = "Characteristics",
-          opacity = 0.5
-        )
-      }
-      # create legend for data sets with multiple factors/bins for parameter count
-      if (length(param_diff) > 0) {
-        map <- map %>% leaflet::addLegend("bottomright",
-          pal = pal, values = sumdat$Parameter_Count,
-          title = "Characteristics",
-          opacity = 0.5
-        )
-      }
-
-      # TADA_addPolys and TADA_addPoints are in Utilities.R
-      map <- TADA_addPolys(map, "extdata/AKAllotments.shp", "Tribes", "Alaska Allotments", bbox)
-      map <- TADA_addPolys(map, "extdata/AmericanIndian.shp", "Tribes", "American Indian", bbox)
-      map <- TADA_addPolys(map, "extdata/OffReservation.shp", "Tribes", "Off Reservation", bbox)
-      map <- TADA_addPolys(map, "extdata/OKTribe.shp", "Tribes", "Oklahoma Tribe", bbox)
-      map <- TADA_addPoints(map, "extdata/AKVillages.shp", "Tribes", "Alaska Native Villages", bbox)
-      map <- TADA_addPoints(map, "extdata/VATribe.shp", "Tribes", "Virginia Tribe", bbox)
-      map <- leaflet::addLayersControl(map,
-        overlayGroups = c("Tribes"),
-        options = leaflet::layersControlOptions(collapsed = FALSE)
-      )
-
-      return(map)
-    })
-  }))
-}
-
-#' Create Flagged Sites Map
-#'
-#' @param .data TADA dataframe containing the data downloaded from the WQP, where
-#' each row represents a unique data record. Dataframe must include the columns
-#' 'MonitoringLocationIdentifier','MonitoringLocationName','TADA.LatitudeMeasure',
-#' and 'TADA.LongitudeMeasure' to run this function.
-#'
-#' @return A leaflet map that shows all sites in the dataframe that contain
-#' flagged data in the form of:
-#' 1) imprecise coordinates - latitudes and/or longitudes that contain fewer
-#'    then 3 decimal places.
-#' 2) outside USA - coordinates that fall outside the bounds of the USA.
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Load example dataframe:
-#' data(Data_Nutrients_UT)
-#' data(Data_6Tribes_5y_Harmonized)
-#'
-#' # Create maps:
-#' TADA_FlaggedSitesMap(Data_Nutrients_UT)
-#' TADA_FlaggedSitesMap(Data_6Tribes_5y_Harmonized)
-#' }
-#'
-TADA_FlaggedSitesMap <- function(.data) {
-  invalid <- TADA_FlagCoordinates(.data, flaggedonly = TRUE)
-  lowres <- invalid[invalid$TADA.SuspectCoordinates.Flag == "Imprecise_lessthan3decimaldigits", ]
-  outsideusa <- invalid[invalid$TADA.SuspectCoordinates.Flag %in% c("LAT_OutsideUSA", "LONG_OutsideUSA"), ]
-
-  lowresIcon <- leaflet::makeAwesomeIcon(icon = "circle", library = "fa", iconColor = "#ffffff", markerColor = "green")
-  outsideIcon <- leaflet::makeAwesomeIcon(icon = "circle", library = "fa", iconColor = "#ffffff", markerColor = "darkblue")
-
-  map <- leaflet::leaflet() %>%
-    leaflet::addProviderTiles("Esri.WorldTopoMap", group = "World topo", options = leaflet::providerTileOptions(updateWhenZooming = FALSE, updateWhenIdle = TRUE)) %>%
-    leaflet.extras::addResetMapButton() # button to reset to initial zoom and lat/long
-  if (nrow(outsideusa) > 0) {
-    map <- map %>% leaflet::addAwesomeMarkers(~TADA.LongitudeMeasure,
-      ~TADA.LatitudeMeasure,
-      icon = outsideIcon,
-      # label = ~as.character(MonitoringLocationIdentifier),
-      popup = paste0(
-        "Site ID: ", outsideusa$MonitoringLocationIdentifier,
-        "<br> Site Name: ", outsideusa$MonitoringLocationName,
-        "<br> Latitude: ", outsideusa$TADA.LatitudeMeasure,
-        "<br> Longitude: ", outsideusa$TADA.LongitudeMeasure
-      ),
-      data = outsideusa
-    )
-  }
-  if (nrow(lowres) > 0) {
-    map <- map %>% leaflet::addAwesomeMarkers(~TADA.LongitudeMeasure,
-      ~TADA.LatitudeMeasure,
-      icon = lowresIcon,
-      # label = ~as.character(MonitoringLocationIdentifier),
-      popup = paste0(
-        "Site ID: ", lowres$MonitoringLocationIdentifier,
-        "<br> Site Name: ", lowres$MonitoringLocationName,
-        "<br> Latitude: ", lowres$TADA.LatitudeMeasure,
-        "<br> Longitude: ", lowres$TADA.LongitudeMeasure
-      ),
-      data = lowres
-    )
-  }
-  return(map)
-}
-
-#' Create Nearby Sites Map
-#'
-#' @param .data TADA dataframe after running TADA.FindNearbySites.
-#' @param dist_buffer Distance in m to show a radius around each site marker.
-#'
-#'
-#' @return A leaflet map that shows all sites in the dataframe that contain
-#' flagged data in the form of near other sites - groups of sites that are spatially located within
-#'    a threshold distance (defaulting to 100 m) from each other and within the same catchment.
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Load example dataframe:
-#' data(Data_Nutrients_UT)
-#'
-#'
-#' # Create maps:
-#' TADA_FlaggedSitesMap(Data_Nutrients_UT)
-#' TADA_FlaggedSitesMap(Data_6Tribes_5y_Harmonized)
-#' }
-#'
-TADA_NearbySitesMap <- function(.data, dist_buffer = 100) {
-  if (c("TADA.NearbySiteGroup") %in% colnames(.data) == FALSE) {
-    .data <- TADA_FindNearbySites(.data)
-  }
-
-  .data <- .data %>%
-    dplyr::filter(!is.na(TADA.NearbySiteGroup)) %>%
-    dplyr::mutate(
-      LatitudeMeasure = as.numeric(LatitudeMeasure),
-      LongitudeMeasure = as.numeric(LongitudeMeasure)
-    ) %>%
-    dplyr::select(
-      LongitudeMeasure, LatitudeMeasure, TADA.MonitoringLocationIdentifier,
-      MonitoringLocationIdentifier, MonitoringLocationName, TADA.LatitudeMeasure,
-      TADA.LongitudeMeasure, OrganizationIdentifier, TADA.NearbySiteGroup
-    ) %>%
-    dplyr::distinct()
-
-  icon.colors <- grDevices::rainbow(as.numeric(length(unique(.data$TADA.NearbySiteGroup))))
-
-  pal <- leaflet::colorFactor(
-    palette = icon.colors,
-    domain = .data$TADA.NearbySiteGroup
-  )
-
-  map <- leaflet::leaflet(.data) %>%
-    leaflet::addProviderTiles("Esri.WorldTopoMap", group = "World topo", options = leaflet::providerTileOptions(updateWhenZooming = FALSE, updateWhenIdle = TRUE)) %>%
-    leaflet.extras::addResetMapButton() # button to reset to initial zoom and lat/long
-  if (nrow(.data) > 0) {
-    map <- map %>%
-      leaflet::addCircleMarkers(~LongitudeMeasure,
-        ~LatitudeMeasure,
-        color = ~ pal(TADA.NearbySiteGroup),
-        opacity = 1,
-        fillColor = ~ pal(TADA.NearbySiteGroup),
-        fillOpacity = 1,
-        radius = ifelse(dist_buffer > 200,
-          dist_buffer / 10,
-          20
-        ),
-        weight = 1,
-        # label = ~as.character(TADA.MonitoringLocationIdentifier),
-        popup = paste0(
-          "Nearby Group Name: ", .data$TADA.MonitoringLocationIdentifier,
-          "<br> Nearby Site Group: ", .data$TADA.NearbySiteGroup,
-          "<br> Site ID: ", .data$MonitoringLocationIdentifier,
-          "<br> Site Name: ", .data$MonitoringLocationName,
-          "<br> Latitude: ", .data$LatitudeMeasure,
-          "<br> Longitude: ", .data$LongitudeMeasure
-        ),
-        data = .data,
-        clusterOptions = leaflet::markerClusterOptions(),
-      ) %>%
-      leaflet::addCircles(~LongitudeMeasure,
-        ~LatitudeMeasure,
-        color = ~ pal(TADA.NearbySiteGroup),
-        opacity = 0.1,
-        fillColor = ~ pal(TADA.NearbySiteGroup),
-        fillOpacity = 0.1,
-        radius = dist_buffer,
-        weight = 1
-      )
-  }
-
-  return(map)
 }
 
 
@@ -744,7 +428,7 @@ TADA_NearbySitesMap <- function(.data, dist_buffer = 100) {
 #'
 #' @examples
 #' # Load example dataset:
-#' data(Data_Nutrients_UT)
+#' utils::data(Data_Nutrients_UT)
 #'
 #' # Create a list of parameters in the dataset and the number of records of
 #' # each parameter:
@@ -757,15 +441,33 @@ TADA_NearbySitesMap <- function(.data, dist_buffer = 100) {
 #'     "TADA.ComparableDataIdentifier"
 #' )
 #'
-TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "null") {
-  dat <- utils::head(TADA_FieldValuesTable(.data = .data, field = field, characteristicName = characteristicName), 12)
+TADA_FieldValuesPie <- function(
+  .data,
+  field = "null",
+  characteristicName = "null"
+) {
+  dat <- utils::head(
+    TADA_FieldValuesTable(
+      .data = .data,
+      field = field,
+      characteristicName = characteristicName
+    ),
+    12
+  )
   # If data set contains more than 12 categories, dat2 aggregates 'all other' categories into its own row.
-  dat2 <- data.frame(Value = "ALL OTHERS", Count = sum(TADA_FieldValuesTable(.data = .data, field = field, characteristicName = characteristicName)[-(1:12), ][2]))
+  dat2 <- data.frame(
+    Value = "ALL OTHERS",
+    Count = sum(TADA_FieldValuesTable(
+      .data = .data,
+      field = field,
+      characteristicName = characteristicName
+    )[-(1:12), ][2])
+  )
 
   dat$Legend <- paste0(dat$Value, " - ", dat$Count, " results")
   dat2$Legend <- paste0(dat2$Value, " - ", dat2$Count, " results")
-  dat <- dat %>%
-    dplyr::rowwise() %>%
+  dat <- dat |>
+    dplyr::rowwise() |>
     dplyr::mutate(Legend = stringr::str_wrap(Legend, width = 50))
 
   # Only apply the all others category if there are greater than 12 categories to display.
@@ -776,19 +478,26 @@ TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "nul
   # create TADA color palette
   tada.pal <- TADA_ColorPalette()
 
-
   # define number of colors required for pie chart
   colorCount <- length(unique(dat$Legend))
 
   if (colorCount < 15) {
     tada.pal <- c(
-      tada.pal[3], tada.pal[5], tada.pal[6],
-      tada.pal[8], tada.pal[9], tada.pal[10],
-      tada.pal[14], tada.pal[12], tada.pal[15],
-      tada.pal[4], tada.pal[7], tada.pal[13],
-      tada.pal[2], tada.pal[11]
+      tada.pal[3],
+      tada.pal[5],
+      tada.pal[6],
+      tada.pal[8],
+      tada.pal[9],
+      tada.pal[10],
+      tada.pal[14],
+      tada.pal[12],
+      tada.pal[15],
+      tada.pal[4],
+      tada.pal[7],
+      tada.pal[13],
+      tada.pal[2],
+      tada.pal[11]
     )
-
 
     tada.pal <- tada.pal[2:(1 + colorCount)]
   }
@@ -799,7 +508,6 @@ TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "nul
     tada.pal <- getPalette[2:(1 + colorCount)]
   }
 
-
   # create pie chart
   pie <- ggplot2::ggplot(dat, ggplot2::aes(x = "", y = Count, fill = Legend)) +
     ggplot2::scale_fill_manual(values = tada.pal, name = field) +
@@ -809,7 +517,6 @@ TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "nul
 
   return(pie)
 }
-
 
 
 #' Create Scatterplot(s)
@@ -837,7 +544,7 @@ TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "nul
 #'
 #' @examples
 #' # Load example dataset:
-#' data(Data_6Tribes_5y_Harmonized)
+#' utils::data(Data_6Tribes_5y_Harmonized)
 #'
 #' # Create a scatterplot for each comparable data group (TADA.ComparableDataIdentifier)
 #' # in the input dataframe:
@@ -858,7 +565,7 @@ TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "nul
 #' # plot in list. In this example, we will group by both TADA.ComparableDataIdentifier
 #' # and MonitoringLocationTypeName (e.g. stream, reservoir, canal, etc.)
 #' # Load example dataset:
-#' data(Data_Nutrients_UT)
+#' utils::data(Data_Nutrients_UT)
 #' Scatterplot_output <- TADA_Scatterplot(Data_Nutrients_UT,
 #'   id_cols = c("TADA.ComparableDataIdentifier", "MonitoringLocationTypeName")
 #' )
@@ -867,38 +574,44 @@ TADA_FieldValuesPie <- function(.data, field = "null", characteristicName = "nul
 #' Scatterplot_output[[25]]
 #' Scatterplot_output[[35]]
 #'
-TADA_Scatterplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")) {
-  # check .data is data.frame
-  TADA_CheckType(.data, "data.frame", "Input object")
-
+TADA_Scatterplot <- function(
+  .data,
+  id_cols = c("TADA.ComparableDataIdentifier")
+) {
   # ensure comparable data identifier is in the id_cols vector
   if (is.null(id_cols)) {
     id_cols <- "TADA.ComparableDataIdentifier"
   }
 
   if (!"TADA.ComparableDataIdentifier" %in% id_cols) {
-    warning("TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended: plotting without it may produce errors in the plot.")
+    warning(
+      "TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended: plotting without it may produce errors in the plot."
+    )
   }
 
-  # check .data has required columns
-  TADA_CheckColumns(.data, id_cols)
+  # check .data is data.frame and has required columns (including id_cols)
+  expected_cols <- c(
+    id_cols,
+    c(
+      "ActivityStartDate",
+      "TADA.ResultMeasureValue",
+      "TADA.ResultMeasure.MeasureUnitCode"
+    )
+  )
+  TADA_CheckColumns(.data, expected_cols)
 
-  # check .data has required columns
-  TADA_CheckColumns(.data, c(
-    "ActivityStartDate",
-    "TADA.ResultMeasureValue",
-    "TADA.ResultMeasure.MeasureUnitCode"
-  ))
-
-  .data <- .data %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) %>%
+  .data <- .data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(id_cols))) |>
     dplyr::mutate(Group = dplyr::cur_group_id())
 
   all_scatterplots <- list()
 
   for (i in 1:max(.data$Group)) {
     plot.data <- subset(.data, .data$Group == i)
-    groupid <- TADA_CharStringRemoveNA(paste0(unique(plot.data[, id_cols]), collapse = " "))
+    groupid <- TADA_CharStringRemoveNA(paste0(
+      unique(plot.data[, id_cols]),
+      collapse = " "
+    ))
 
     # units label for y axis
     unit <- unique(plot.data$TADA.ResultMeasure.MeasureUnitCode)
@@ -922,58 +635,96 @@ TADA_Scatterplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")
       name = "<b>All Data<b>",
       hoverinfo = "text",
       hovertext = paste(
-        "Result:", paste0(plot.data$TADA.ResultMeasureValue, " ", plot.data$TADA.ResultMeasure.MeasureUnitCode), "<br>",
-        "Activity Start Date:", plot.data$ActivityStartDate, "<br>",
-        "Activity Start Date Time:", plot.data$ActivityStartDateTime, "<br>",
-        "Monitoring Location Name:", plot.data$MonitoringLocationName, "<br>",
-        "Media:", plot.data$TADA.ActivityMediaName, "<br>",
-        "Media Subdivision:", plot.data$ActivityMediaSubdivisionName, "<br>",
-        "Result Depth:", paste0(
-          plot.data$TADA.ResultDepthHeightMeasure.MeasureValue, " ",
+        "Result:",
+        paste0(
+          plot.data$TADA.ResultMeasureValue,
+          " ",
+          plot.data$TADA.ResultMeasure.MeasureUnitCode
+        ),
+        "<br>",
+        "Activity Start Date:",
+        plot.data$ActivityStartDate,
+        "<br>",
+        "Activity Start Date Time:",
+        plot.data$ActivityStartDateTime,
+        "<br>",
+        "Monitoring Location Name:",
+        plot.data$MonitoringLocationName,
+        "<br>",
+        "Organization Name: ",
+        plot.data$OrganizationFormalName,
+        "<br>",
+        "Media:",
+        plot.data$TADA.ActivityMediaName,
+        "<br>",
+        "Media Subdivision:",
+        plot.data$ActivityMediaSubdivisionName,
+        "<br>",
+        "Result Depth:",
+        paste0(
+          plot.data$TADA.ResultDepthHeightMeasure.MeasureValue,
+          " ",
           plot.data$TADA.ResultDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Relative Depth:", plot.data$ActivityRelativeDepthName, "<br>",
-        "Activity Depth:", paste0(
-          plot.data$TADA.ActivityDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Relative Depth:",
+        plot.data$ActivityRelativeDepthName,
+        "<br>",
+        "Activity Depth:",
+        paste0(
+          plot.data$TADA.ActivityDepthHeightMeasure.MeasureValue,
+          " ",
           plot.data$TADA.ActivityDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Top Depth:", paste0(
-          plot.data$TADA.ActivityTopDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Top Depth:",
+        paste0(
+          plot.data$TADA.ActivityTopDepthHeightMeasure.MeasureValue,
+          " ",
           plot.data$TADA.ActivityTopDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Bottom Depth:", paste0(
-          plot.data$TADA.ActivityBottomDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Bottom Depth:",
+        paste0(
+          plot.data$TADA.ActivityBottomDepthHeightMeasure.MeasureValue,
+          " ",
           plot.data$TADA.ActivityBottomDepthHeightMeasure.MeasureUnitCode
-        ), "<br>"
+        ),
+        "<br>"
       )
     )
 
     # figure margin
-    mrg <- list(
-      l = 50, r = 20,
-      b = 20, t = 55,
-      pad = 0
-    )
+    mrg <- list(l = 50, r = 20, b = 20, t = 55, pad = 0)
 
     # scatterplot layout and labels
-    one_scatterplot <- one_scatterplot %>%
+    one_scatterplot <- one_scatterplot |>
       plotly::layout(
         yaxis = list(
-          title = unit, titlefont = list(size = 16, family = "Arial"),
+          title = unit,
+          titlefont = list(size = 16, family = "Arial"),
           tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         xaxis = list(
-          title = y_label, titlefont = list(size = 16, family = "Arial"), tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          title = y_label,
+          titlefont = list(size = 16, family = "Arial"),
+          tickfont = list(size = 16, family = "Arial"),
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         hoverlabel = list(bgcolor = "white"),
         title = paste0("Scatterplot of \n", groupid),
         plot_bgcolor = "#e5ecf6",
         margin = mrg
-      ) %>%
+      ) |>
       # config options https://plotly.com/r/configuration-options/
       plotly::config(displaylogo = FALSE) # , displayModeBar = TRUE) # TRUE makes bar always visible
 
@@ -1019,7 +770,7 @@ TADA_Scatterplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")
 #'
 #' @examples
 #' # Load example dataset:
-#' data(Data_Nutrients_UT)
+#' utils::data(Data_Nutrients_UT)
 #' # Create a single scatterplot with two specified groups from TADA.ComparableDataIdentifier
 #' TADA_TwoCharacteristicScatterplot(Data_Nutrients_UT,
 #'   id_cols = "TADA.ComparableDataIdentifier",
@@ -1030,43 +781,46 @@ TADA_Scatterplot <- function(.data, id_cols = c("TADA.ComparableDataIdentifier")
 #' )
 #'
 #' # Load example dataset:
-#' data(Data_6Tribes_5y_Harmonized)
+#' utils::data(Data_6Tribes_5y_Harmonized)
 #' # Create a single scatterplot with two specified groups from TADA.ComparableDataIdentifier
 #' TADA_TwoCharacteristicScatterplot(Data_6Tribes_5y_Harmonized,
 #'   id_cols = "TADA.ComparableDataIdentifier",
-#'   groups = c("TEMPERATURE_NA_NA_DEG C", "PH_NA_NA_NA")
+#'   groups = c("TEMPERATURE_NA_NA_DEG C", "PH_NONE_NONE_NONE")
 #' )
 #'
-TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableDataIdentifier", groups) {
-  # check .data is data.frame
-  TADA_CheckType(.data, "data.frame", "Input object")
-
-  # check .data has required columns
-  TADA_CheckColumns(.data, id_cols)
-
-  # check .data has required columns
-  reqcols <- c(
-    "TADA.ResultMeasureValue",
-    "TADA.ResultMeasure.MeasureUnitCode",
-    "ActivityStartDate"
-  )
-
-  # check .data has required columns
-  TADA_CheckColumns(.data, reqcols)
-
+TADA_TwoCharacteristicScatterplot <- function(
+  .data,
+  id_cols = "TADA.ComparableDataIdentifier",
+  groups
+) {
   # if left blank, ensure comparable data identifier is in the id_cols vector
   if (is.null(id_cols)) {
     id_cols <- "TADA.ComparableDataIdentifier"
   }
 
+  # check .data is data.frame and has required columns (including id_cols)
+  expected_cols <- c(
+    id_cols,
+    c(
+      "ActivityStartDate",
+      "TADA.ResultMeasureValue",
+      "TADA.ResultMeasure.MeasureUnitCode"
+    )
+  )
+  TADA_CheckColumns(.data, expected_cols)
+
   if (!"TADA.ComparableDataIdentifier" %in% id_cols) {
-    print("Note: TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended.")
+    print(
+      "Note: TADA.ComparableDataIdentifier not found in id_cols argument and is highly recommended."
+    )
   }
 
   # check that groups are in id_cols
   id <- unlist(unique(.data[, id_cols]))
   if (any(!groups %in% id)) {
-    stop("The 'groups' vector contains one or more inputs that are not found within your input dataset. Check spelling and try again.")
+    stop(
+      "The 'groups' vector contains one or more inputs that are not found within your input dataset. Check spelling and try again."
+    )
   }
 
   depthcols <- names(.data)[grepl("DepthHeightMeasure", names(.data))]
@@ -1075,7 +829,20 @@ TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableD
   plot.data <- as.data.frame(.data)
 
   # this subset must include all fields included in plot hover below
-  plot.data <- subset(plot.data, plot.data[, id_cols] %in% groups)[, c(id_cols, reqcols, depthcols, "ActivityStartDateTime", "MonitoringLocationName", "TADA.ActivityMediaName", "ActivityMediaSubdivisionName", "ActivityRelativeDepthName", "TADA.CharacteristicName", "TADA.MethodSpeciationName", "TADA.ResultSampleFractionText")]
+  plot.data <- subset(plot.data, plot.data[, id_cols] %in% groups)[, c(
+    id_cols,
+    expected_cols,
+    depthcols,
+    "ActivityStartDateTime",
+    "MonitoringLocationName",
+    "OrganizationFormalName",
+    "TADA.ActivityMediaName",
+    "ActivityMediaSubdivisionName",
+    "ActivityRelativeDepthName",
+    "TADA.CharacteristicName",
+    "TADA.MethodSpeciationName",
+    "TADA.ResultSampleFractionText"
+  )]
   plot.data$name <- gsub("_NA", "", plot.data[, id_cols])
   plot.data$name <- gsub("_", " ", plot.data$name)
 
@@ -1095,71 +862,99 @@ TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableD
   )
 
   # figure margin
-  mrg <- list(
-    l = 50, r = 75,
-    b = 25, t = 75,
-    pad = 0
-  )
+  mrg <- list(l = 50, r = 75, b = 25, t = 75, pad = 0)
 
   # create TADA color palette
   tada.pal <- TADA_ColorPalette(col_pair = TRUE)
 
-  scatterplot <- plotly::plot_ly(type = "scatter", mode = "markers") %>%
+  scatterplot <- plotly::plot_ly(type = "scatter", mode = "markers") |>
     plotly::layout(
       xaxis = list(
         # title = "Activity Start Date", # not necessary?
         titlefont = list(size = 16, family = "Arial"),
         tickfont = list(size = 16, family = "Arial"),
-        hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-        showgrid = FALSE, tickcolor = "black"
+        hoverformat = ",.4r",
+        linecolor = "black",
+        rangemode = "tozero",
+        showgrid = FALSE,
+        tickcolor = "black"
       ),
       yaxis = list(
-        title = stringr::str_remove_all(stringr::str_remove_all(
-          stringr::str_remove_all(paste0(param1$TADA.CharacteristicName[1], "  ", param1$TADA.ResultMeasure.MeasureUnitCode[1]), stringr::fixed(" (NA)")),
-          stringr::fixed("NA ")
-        ), stringr::fixed(" NA")),
+        title = stringr::str_remove_all(
+          stringr::str_remove_all(
+            stringr::str_remove_all(
+              paste0(
+                param1$TADA.CharacteristicName[1],
+                "  ",
+                param1$TADA.ResultMeasure.MeasureUnitCode[1]
+              ),
+              stringr::fixed(" (NA)")
+            ),
+            stringr::fixed("NA ")
+          ),
+          stringr::fixed(" NA")
+        ),
         titlefont = list(size = 16, family = "Arial"),
         tickfont = list(size = 16, family = "Arial"),
-        hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-        showgrid = FALSE, tickcolor = "black"
+        hoverformat = ",.4r",
+        linecolor = "black",
+        rangemode = "tozero",
+        showgrid = FALSE,
+        tickcolor = "black"
       ),
       yaxis2 = list(
         side = "right",
         overlaying = "y",
-        title = stringr::str_remove_all(stringr::str_remove_all(
-          stringr::str_remove_all(paste0(param2$TADA.CharacteristicName[1], "  ", param2$TADA.ResultMeasure.MeasureUnitCode[1]), stringr::fixed(" (NA)")),
-          stringr::fixed("NA ")
-        ), stringr::fixed(" NA")),
+        title = stringr::str_remove_all(
+          stringr::str_remove_all(
+            stringr::str_remove_all(
+              paste0(
+                param2$TADA.CharacteristicName[1],
+                "  ",
+                param2$TADA.ResultMeasure.MeasureUnitCode[1]
+              ),
+              stringr::fixed(" (NA)")
+            ),
+            stringr::fixed("NA ")
+          ),
+          stringr::fixed(" NA")
+        ),
         titlefont = list(size = 16, family = "Arial"),
         tickfont = list(size = 16, family = "Arial"),
-        hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-        showgrid = FALSE, tickcolor = "black"
+        hoverformat = ",.4r",
+        linecolor = "black",
+        rangemode = "tozero",
+        showgrid = FALSE,
+        tickcolor = "black"
       ),
       hoverlabel = list(bgcolor = "white"),
       title = title,
       plot_bgcolor = "#e5ecf6",
       margin = mrg,
-      legend = list(
-        orientation = "h",
-        xanchor = "center",
-        x = 0.5,
-        y = -0.2
-      )
-    ) %>%
+      legend = list(orientation = "h", xanchor = "center", x = 0.5, y = -0.2)
+    ) |>
     # config options https://plotly.com/r/configuration-options/
-    plotly::config(displaylogo = FALSE) %>% # , displayModeBar = TRUE) # TRUE makes bar always visible
+    plotly::config(displaylogo = FALSE) |> # , displayModeBar = TRUE) # TRUE makes bar always visible
     plotly::add_trace(
       data = param1,
       x = ~ as.Date(ActivityStartDate),
       y = ~TADA.ResultMeasureValue,
-      name = stringr::str_remove_all(stringr::str_remove_all(
-        stringr::str_remove_all(paste0(
-          param1$TADA.ResultSampleFractionText, " ",
-          param1$TADA.CharacteristicName, " ",
-          param1$TADA.MethodSpeciationName
-        ), stringr::fixed(" (NA)")),
-        stringr::fixed("NA ")
-      ), stringr::fixed(" NA")),
+      name = stringr::str_remove_all(
+        stringr::str_remove_all(
+          stringr::str_remove_all(
+            paste0(
+              param1$TADA.ResultSampleFractionText,
+              " ",
+              param1$TADA.CharacteristicName,
+              " ",
+              param1$TADA.MethodSpeciationName
+            ),
+            stringr::fixed(" (NA)")
+          ),
+          stringr::fixed("NA ")
+        ),
+        stringr::fixed(" NA")
+      ),
       marker = list(
         size = 10,
         color = tada.pal[1, 1],
@@ -1167,73 +962,148 @@ TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableD
       ),
       hoverinfo = "text",
       hovertext = paste(
-        "Result:", paste0(param1$TADA.ResultMeasureValue, " ", param1$TADA.ResultMeasure.MeasureUnitCode), "<br>",
-        "Activity Start Date:", param1$ActivityStartDate, "<br>",
-        "Activity Start Date Time:", param1$ActivityStartDateTime, "<br>",
-        "Monitoring Location Name:", param1$MonitoringLocationName, "<br>",
-        "Media:", param1$TADA.ActivityMediaName, "<br>",
-        "Media Subdivision:", param1$ActivityMediaSubdivisionName, "<br>",
-        "Result Depth:", paste0(
-          param1$TADA.ResultDepthHeightMeasure.MeasureValue, " ",
+        "Result:",
+        paste0(
+          param1$TADA.ResultMeasureValue,
+          " ",
+          param1$TADA.ResultMeasure.MeasureUnitCode
+        ),
+        "<br>",
+        "Activity Start Date:",
+        param1$ActivityStartDate,
+        "<br>",
+        "Activity Start Date Time:",
+        param1$ActivityStartDateTime,
+        "<br>",
+        "Monitoring Location Name:",
+        param1$MonitoringLocationName,
+        "<br>",
+        "Organization Name: ",
+        param1$OrganizationFormalName,
+        "<br>",
+        "Media:",
+        param1$TADA.ActivityMediaName,
+        "<br>",
+        "Media Subdivision:",
+        param1$ActivityMediaSubdivisionName,
+        "<br>",
+        "Result Depth:",
+        paste0(
+          param1$TADA.ResultDepthHeightMeasure.MeasureValue,
+          " ",
           param1$TADA.ResultDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Relative Depth Name:", param1$ActivityRelativeDepthName, "<br>",
-        "Activity Depth:", paste0(
-          param1$TADA.ActivityDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Relative Depth Name:",
+        param1$ActivityRelativeDepthName,
+        "<br>",
+        "Activity Depth:",
+        paste0(
+          param1$TADA.ActivityDepthHeightMeasure.MeasureValue,
+          " ",
           param1$TADA.ActivityDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Top Depth:", paste0(
-          param1$TADA.ActivityTopDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Top Depth:",
+        paste0(
+          param1$TADA.ActivityTopDepthHeightMeasure.MeasureValue,
+          " ",
           param1$TADA.ActivityTopDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Bottom Depth:", paste0(
-          param1$TADA.ActivityBottomDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Bottom Depth:",
+        paste0(
+          param1$TADA.ActivityBottomDepthHeightMeasure.MeasureValue,
+          " ",
           param1$TADA.ActivityBottomDepthHeightMeasure.MeasureUnitCode
-        ), "<br>"
+        ),
+        "<br>"
       )
-    ) %>%
+    ) |>
     plotly::add_trace(
       data = param2,
       x = ~ as.Date(ActivityStartDate),
       y = ~TADA.ResultMeasureValue,
-      name = stringr::str_remove_all(stringr::str_remove_all(
-        stringr::str_remove_all(paste0(
-          param2$TADA.ResultSampleFractionText, " ",
-          param2$TADA.CharacteristicName, " ",
-          param2$TADA.MethodSpeciationName
-        ), stringr::fixed(" (NA)")),
-        stringr::fixed("NA ")
-      ), stringr::fixed(" NA")),
+      name = stringr::str_remove_all(
+        stringr::str_remove_all(
+          stringr::str_remove_all(
+            paste0(
+              param2$TADA.ResultSampleFractionText,
+              " ",
+              param2$TADA.CharacteristicName,
+              " ",
+              param2$TADA.MethodSpeciationName
+            ),
+            stringr::fixed(" (NA)")
+          ),
+          stringr::fixed("NA ")
+        ),
+        stringr::fixed(" NA")
+      ),
       marker = list(
-        size = 10, color = tada.pal[2, 1],
+        size = 10,
+        color = tada.pal[2, 1],
         line = list(color = tada.pal[2, 2], width = 2)
       ),
       yaxis = "y2",
       hoverinfo = "text",
       hovertext = paste(
-        "Result:", paste0(param2$TADA.ResultMeasureValue, " ", param2$TADA.ResultMeasure.MeasureUnitCode), "<br>",
-        "Activity Start Date:", param2$ActivityStartDate, "<br>",
-        "Activity Start Date Time:", param2$ActivityStartDateTime, "<br>",
-        "Monitoring Location Name:", param2$MonitoringLocationName, "<br>",
-        "Media:", param2$TADA.ActivityMediaName, "<br>",
-        "Media Subdivision:", param2$ActivityMediaSubdivisionName, "<br>",
-        "Result Depth:", paste0(
-          param2$TADA.ResultDepthHeightMeasure.MeasureValue, " ",
+        "Result:",
+        paste0(
+          param2$TADA.ResultMeasureValue,
+          " ",
+          param2$TADA.ResultMeasure.MeasureUnitCode
+        ),
+        "<br>",
+        "Activity Start Date:",
+        param2$ActivityStartDate,
+        "<br>",
+        "Activity Start Date Time:",
+        param2$ActivityStartDateTime,
+        "<br>",
+        "Monitoring Location Name:",
+        param2$MonitoringLocationName,
+        "<br>",
+        "Organization Name: ",
+        param2$OrganizationFormalName,
+        "<br>",
+        "Media:",
+        param2$TADA.ActivityMediaName,
+        "<br>",
+        "Media Subdivision:",
+        param2$ActivityMediaSubdivisionName,
+        "<br>",
+        "Result Depth:",
+        paste0(
+          param2$TADA.ResultDepthHeightMeasure.MeasureValue,
+          " ",
           param2$TADA.ResultDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Relative Depth Name:", param2$ActivityRelativeDepthName, "<br>",
-        "Activity Depth:", paste0(
-          param2$TADA.ActivityDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Relative Depth Name:",
+        param2$ActivityRelativeDepthName,
+        "<br>",
+        "Activity Depth:",
+        paste0(
+          param2$TADA.ActivityDepthHeightMeasure.MeasureValue,
+          " ",
           param2$TADA.ActivityDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Top Depth:", paste0(
-          param2$TADA.ActivityTopDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Top Depth:",
+        paste0(
+          param2$TADA.ActivityTopDepthHeightMeasure.MeasureValue,
+          " ",
           param2$TADA.ActivityTopDepthHeightMeasure.MeasureUnitCode
-        ), "<br>",
-        "Activity Bottom Depth:", paste0(
-          param2$TADA.ActivityBottomDepthHeightMeasure.MeasureValue, " ",
+        ),
+        "<br>",
+        "Activity Bottom Depth:",
+        paste0(
+          param2$TADA.ActivityBottomDepthHeightMeasure.MeasureValue,
+          " ",
           param2$TADA.ActivityBottomDepthHeightMeasure.MeasureUnitCode
-        ), "<br>"
+        ),
+        "<br>"
       )
     )
 
@@ -1273,7 +1143,7 @@ TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableD
 #'
 #' @examples
 #' # Load example dataset:
-#' data(Data_Nutrients_UT)
+#' utils::data(Data_Nutrients_UT)
 #' # UT Nutrients results grouped by county
 #' # transform non-detect data
 #' df2 <- TADA_SimpleCensoredMethods(Data_Nutrients_UT)
@@ -1287,7 +1157,7 @@ TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableD
 #' UT_Nutrients_by_CountyCode[[4]]
 #'
 #' # Load example dataset:
-#' data(Data_6Tribes_5y_Harmonized)
+#' utils::data(Data_6Tribes_5y_Harmonized)
 #'
 #' # Filter the example data so it includes only one
 #' # TADA.ComparableDataIdentifier
@@ -1311,61 +1181,63 @@ TADA_TwoCharacteristicScatterplot <- function(.data, id_cols = "TADA.ComparableD
 #' # (by MonitoringLocationName) with the greatest number of results
 #' TADA_GroupedScatterplot(df, group_col = "MonitoringLocationName")
 #'
-TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName", groups = NULL) {
-  # check .data is data.frame
-  TADA_CheckType(.data, "data.frame", "Input object")
-
-  # check .data has required columns
-  reqcols <- c(
+TADA_GroupedScatterplot <- function(
+  .data,
+  group_col = "MonitoringLocationName",
+  groups = NULL
+) {
+  # check .data is data.frame and has required columns (including group_col)
+  required_cols <- c(
     "TADA.ComparableDataIdentifier",
     "TADA.ResultMeasureValue",
     "TADA.ResultMeasure.MeasureUnitCode",
     "ActivityStartDate",
     "ActivityStartDateTime",
-    "MonitoringLocationName"
+    "MonitoringLocationName",
+    "OrganizationFormalName"
   )
-
-  # add user-selected group_col to list of required columns
-  reqcols <- reqcols %>%
-    append(group_col) %>%
-    unique()
-
-  # check .data has required columns
-  TADA_CheckColumns(.data, reqcols)
-
+  required_cols <- required_cols |> append(group_col) |> unique()
+  TADA_CheckColumns(.data, required_cols)
 
   # only allows for 1 column selection in id_cols
   if (length(group_col) > 1) {
-    stop("TADA_GroupedScatterplot: group_col argument can only be a single value.")
+    stop(
+      "TADA_GroupedScatterplot: group_col argument can only be a single value."
+    )
   }
 
   # stop function if only one group is supplied
   if (!is.null(groups)) {
     if (length(groups) == 1) {
-      stop("TADA_GroupedScatterplot: requires at least two 'groups'. Use TADA_Scatterplot to plot results without grouping.")
+      stop(
+        "TADA_GroupedScatterplot: requires at least two 'groups'. Use TADA_Scatterplot to plot results without grouping."
+      )
     }
   }
 
   # if groups are not specified, select the top four groups by number of results.
   if (is.null(groups)) {
-    assign.groups <- .data %>%
-      dplyr::group_by_at(group_col) %>%
-      dplyr::summarize(NResults = length(TADA.ResultMeasureValue)) %>%
-      dplyr::arrange(dplyr::desc(NResults)) %>%
+    assign.groups <- .data |>
+      dplyr::group_by_at(group_col) |>
+      dplyr::summarize(NResults = length(TADA.ResultMeasureValue)) |>
+      dplyr::arrange(dplyr::desc(NResults)) |>
       dplyr::filter(!is.na(get(group_col)))
-
 
     # calculate how many total groups are available in TADA dataframe
     n.groups.total <- nrow(assign.groups)
 
     # select top four groups by number of results
-    groups <- assign.groups %>%
-      dplyr::slice_head(n = 4) %>%
-      dplyr::select(as.character(group_col)) %>%
+    groups <- assign.groups |>
+      dplyr::slice_head(n = 4) |>
+      dplyr::select(as.character(group_col)) |>
       dplyr::pull()
 
     # create string of group names for printed message
-    groups.string <- stringi::stri_replace_last(paste(groups, collapse = "; "), " and ", fixed = "; ")
+    groups.string <- stringi::stri_replace_last(
+      paste(groups, collapse = "; "),
+      " and ",
+      fixed = "; "
+    )
 
     # calculate number of groups to be plotted
     n.groups.plotted <- length(groups)
@@ -1381,13 +1253,26 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
 
     # if only group is identified, stop and print message to use TADA_Scatterplot
     if (n.groups.plotted == "one") {
-      stop("TADA_GroupedScatterplot: requires at least two 'groups'. Use TADA_Scatterplot to plot results without grouping.")
+      stop(
+        "TADA_GroupedScatterplot: requires at least two 'groups'. Use TADA_Scatterplot to plot results without grouping."
+      )
     }
 
     # print message describing groups that will be plotted
-    print(paste0("TADA_GroupedScatterplot: No 'groups' selected for ", group_col, ". There are ",
-      n.groups.total, " ", group_col, "s in the TADA dataframe. The top ", n.groups.plotted,
-      " ", group_col, "s by number of results will be plotted: ", groups.string, ".",
+    print(paste0(
+      "TADA_GroupedScatterplot: No 'groups' selected for ",
+      group_col,
+      ". There are ",
+      n.groups.total,
+      " ",
+      group_col,
+      "s in the TADA dataframe. The top ",
+      n.groups.plotted,
+      " ",
+      group_col,
+      "s by number of results will be plotted: ",
+      groups.string,
+      ".",
       sep = ""
     ))
 
@@ -1402,11 +1287,19 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
     missing.groups <- setdiff(groups, id)
 
     # create a character string of missing groups for printed message
-    missing.groups.string <- stringi::stri_replace_last(paste(missing.groups, collapse = "; "), " and ", fixed = "; ")
+    missing.groups.string <- stringi::stri_replace_last(
+      paste(missing.groups, collapse = "; "),
+      " and ",
+      fixed = "; "
+    )
 
     # stop function if any groups are not found in TADA dataframe
-    stop("TADA_GroupedScatterplot: The following ", group_col, "s are not found in the TADA dataframe: ",
-      missing.groups.string, ". Revise param 'groups' before re-running function.",
+    stop(
+      "TADA_GroupedScatterplot: The following ",
+      group_col,
+      "s are not found in the TADA dataframe: ",
+      missing.groups.string,
+      ". Revise param 'groups' before re-running function.",
       sep = ""
     )
 
@@ -1420,7 +1313,21 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
   plot.data <- as.data.frame(.data)
 
   # this subset must include all fields included in plot hover below
-  plot.data <- subset(plot.data, plot.data[, group_col] %in% groups)[, unique(c(group_col, reqcols, depthcols, "TADA.ComparableDataIdentifier", "ActivityStartDateTime", "MonitoringLocationName", "TADA.ActivityMediaName", "ActivityMediaSubdivisionName", "ActivityRelativeDepthName", "TADA.CharacteristicName", "TADA.MethodSpeciationName", "TADA.ResultSampleFractionText"))]
+  plot.data <- subset(plot.data, plot.data[, group_col] %in% groups)[, unique(c(
+    group_col,
+    required_cols,
+    depthcols,
+    "TADA.ComparableDataIdentifier",
+    "ActivityStartDateTime",
+    "MonitoringLocationName",
+    "TADA.ActivityMediaName",
+    "ActivityMediaSubdivisionName",
+    "ActivityRelativeDepthName",
+    "TADA.CharacteristicName",
+    "TADA.MethodSpeciationName",
+    "TADA.ResultSampleFractionText",
+    "OrganizationFormalName"
+  ))]
 
   plot.data <- dplyr::arrange(plot.data, ActivityStartDate)
 
@@ -1438,18 +1345,16 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
     title <- stringr::str_wrap(
       paste0(
         "Scatterplot of ",
-        TADA_CharStringRemoveNA(unique(plot.data$TADA.ComparableDataIdentifier)[i]),
+        TADA_CharStringRemoveNA(unique(plot.data$TADA.ComparableDataIdentifier)[
+          i
+        ]),
         " Over Time"
       ),
       width = 45
     )
 
     # figure margin
-    mrg <- list(
-      l = 50, r = 75,
-      b = 25, t = 75,
-      pad = 0
-    )
+    mrg <- list(l = 50, r = 75, b = 25, t = 75, pad = 0)
 
     # units label for y axis
     unit <- unique(plot.data$TADA.ResultMeasure.MeasureUnitCode)
@@ -1458,47 +1363,73 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
     # create TADA color palette
     tada.pal <- TADA_ColorPalette(col_pair = TRUE)
 
-    plot.data.y <- subset(plot.data, plot.data[, "TADA.ComparableDataIdentifier"] %in% unique(plot.data$TADA.ComparableDataIdentifier)[i])
-    plot.data.y$name <- gsub("_NA", "", plot.data.y[, "TADA.ComparableDataIdentifier"])
+    plot.data.y <- subset(
+      plot.data,
+      plot.data[, "TADA.ComparableDataIdentifier"] %in%
+        unique(plot.data$TADA.ComparableDataIdentifier)[i]
+    )
+    plot.data.y$name <- gsub(
+      "_NA",
+      "",
+      plot.data.y[, "TADA.ComparableDataIdentifier"]
+    )
     plot.data.y$name <- gsub("_", " ", plot.data.y$name)
 
-    scatterplot <-
-      plotly::plot_ly(type = "scatter", mode = "markers") %>%
+    scatterplot <- plotly::plot_ly(type = "scatter", mode = "markers") |>
       plotly::layout(
         xaxis = list(
           # title = "Activity Start Date", # not necessary?
           titlefont = list(size = 16, family = "Arial"),
           tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         yaxis = list(
-          title = paste(TADA_CharStringRemoveNA(plot.data.y$TADA.CharacteristicName[1]), TADA_CharStringRemoveNA(unique(plot.data.y$TADA.ResultMeasure.MeasureUnitCode))),
+          title = paste(
+            TADA_CharStringRemoveNA(plot.data.y$TADA.CharacteristicName[1]),
+            TADA_CharStringRemoveNA(unique(
+              plot.data.y$TADA.ResultMeasure.MeasureUnitCode
+            ))
+          ),
           titlefont = list(size = 16, family = "Arial"),
           tickfont = list(size = 16, family = "Arial"),
-          hoverformat = ",.4r", linecolor = "black", rangemode = "tozero",
-          showgrid = FALSE, tickcolor = "black"
+          hoverformat = ",.4r",
+          linecolor = "black",
+          rangemode = "tozero",
+          showgrid = FALSE,
+          tickcolor = "black"
         ),
         hoverlabel = list(bgcolor = "white"),
         title = title,
         plot_bgcolor = "#e5ecf6",
         margin = mrg,
         legend = list(
-          title = list(text = paste0("<b>", group_col, "<b>"), x = 0.5, y = 100),
+          title = list(
+            text = paste0("<b>", group_col, "<b>"),
+            x = 0.5,
+            y = 100
+          ),
           orientation = "h",
           xanchor = "center",
           x = 0.5
         )
-      ) %>%
+      ) |>
       # config options https://plotly.com/r/configuration-options/
       plotly::config(displaylogo = FALSE) # , displayModeBar = TRUE) # TRUE makes bar always visible
 
     param <- list()
     for (j in 1:length(groups)) {
       if (length(groups) >= j) {
-        param[[j]] <- subset(param.data[[j]], param.data[[j]][, "TADA.ComparableDataIdentifier"] %in% unique(plot.data$TADA.ComparableDataIdentifier)[i])
+        param[[j]] <- subset(
+          param.data[[j]],
+          param.data[[j]][, "TADA.ComparableDataIdentifier"] %in%
+            unique(plot.data$TADA.ComparableDataIdentifier)[i]
+        )
 
-        scatterplot <- scatterplot %>%
+        scatterplot <- scatterplot |>
           plotly::add_trace(
             data = param[[j]],
             x = ~ as.Date(ActivityStartDate),
@@ -1511,29 +1442,62 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
             ),
             hoverinfo = "text",
             hovertext = paste(
-              "Result:", paste0(param[[j]]$TADA.ResultMeasureValue, " ", param[[j]]$TADA.ResultMeasure.MeasureUnitCode), "<br>",
-              "Activity Start Date:", param[[j]]$ActivityStartDate, "<br>",
-              "Activity Start Date Time:", param[[j]]$ActivityStartDateTime, "<br>",
-              "Monitoring Location Name:", param[[j]]$MonitoringLocationName, "<br>",
-              "Media:", param[[j]]$TADA.ActivityMediaName, "<br>",
-              "Media Subdivision:", param[[j]]$ActivityMediaSubdivisionName, "<br>",
-              "Result Depth:", paste0(
-                param[[j]]$TADA.ResultDepthHeightMeasure.MeasureValue, " ",
+              "Result:",
+              paste0(
+                param[[j]]$TADA.ResultMeasureValue,
+                " ",
+                param[[j]]$TADA.ResultMeasure.MeasureUnitCode
+              ),
+              "<br>",
+              "Activity Start Date:",
+              param[[j]]$ActivityStartDate,
+              "<br>",
+              "Activity Start Date Time:",
+              param[[j]]$ActivityStartDateTime,
+              "<br>",
+              "Monitoring Location Name:",
+              param[[j]]$MonitoringLocationName,
+              "<br>",
+              "Organization Name: ",
+              param[[j]]$OrganizationFormalName,
+              "<br>",
+              "Media:",
+              param[[j]]$TADA.ActivityMediaName,
+              "<br>",
+              "Media Subdivision:",
+              param[[j]]$ActivityMediaSubdivisionName,
+              "<br>",
+              "Result Depth:",
+              paste0(
+                param[[j]]$TADA.ResultDepthHeightMeasure.MeasureValue,
+                " ",
                 param[[j]]$TADA.ResultDepthHeightMeasure.MeasureUnitCode
-              ), "<br>",
-              "Activity Relative Depth Name:", param[[j]]$ActivityRelativeDepthName, "<br>",
-              "Activity Depth:", paste0(
-                param[[j]]$TADA.ActivityDepthHeightMeasure.MeasureValue, " ",
+              ),
+              "<br>",
+              "Activity Relative Depth Name:",
+              param[[j]]$ActivityRelativeDepthName,
+              "<br>",
+              "Activity Depth:",
+              paste0(
+                param[[j]]$TADA.ActivityDepthHeightMeasure.MeasureValue,
+                " ",
                 param[[j]]$TADA.ActivityDepthHeightMeasure.MeasureUnitCode
-              ), "<br>",
-              "Activity Top Depth:", paste0(
-                param[[j]]$TADA.ActivityTopDepthHeightMeasure.MeasureValue, " ",
+              ),
+              "<br>",
+              "Activity Top Depth:",
+              paste0(
+                param[[j]]$TADA.ActivityTopDepthHeightMeasure.MeasureValue,
+                " ",
                 param[[j]]$TADA.ActivityTopDepthHeightMeasure.MeasureUnitCode
-              ), "<br>",
-              "Activity Bottom Depth:", paste0(
-                param[[j]]$TADA.ActivityBottomDepthHeightMeasure.MeasureValue, " ",
+              ),
+              "<br>",
+              "Activity Bottom Depth:",
+              paste0(
+                param[[j]]$TADA.ActivityBottomDepthHeightMeasure.MeasureValue,
+                " ",
                 param[[j]]$TADA.ActivityBottomDepthHeightMeasure.MeasureUnitCode
-              ), "<br>"
+              ),
+              "<br>"
             )
           )
       }
@@ -1543,7 +1507,9 @@ TADA_GroupedScatterplot <- function(.data, group_col = "MonitoringLocationName",
     all_scatterplots[[i]] <- scatterplot
 
     # rename scatterplots to reflect TADA.ComparbaleDataIdentifier (with NAs removed)
-    names(all_scatterplots)[i] <- unique(TADA_CharStringRemoveNA(plot.data$TADA.ComparableDataIdentifier))[i]
+    names(all_scatterplots)[i] <- unique(TADA_CharStringRemoveNA(
+      plot.data$TADA.ComparableDataIdentifier
+    ))[i]
   }
 
   # filter to return one scatterplot, if only one was generated
