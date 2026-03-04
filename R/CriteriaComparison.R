@@ -40,13 +40,9 @@
 #' )
 #'
 TADA_CreatePairRef <- function(
-  .data,
-  ph = TRUE,
-  hardness = TRUE,
-  temp = TRUE,
-  chloride = TRUE,
-  salinity = TRUE,
-  other_char = "null"
+  .data,  ph = TRUE,
+  hardness = TRUE,  temp = TRUE,  chloride = TRUE,
+  salinity = TRUE,  other_char = "null"
 ) {
   # create data frame to store pair refs
   pair.ref <- data.frame(matrix(ncol = 6, nrow = 0))
@@ -54,11 +50,9 @@ TADA_CreatePairRef <- function(
   # name columns in pair.ref df
   colnames(pair.ref) <- c(
     "TADA.CharacteristicName",
-    "TADA.ResultMeasure.MeasureUnitCode",
-    "TADA.MethodSpeciationName",
+    "TADA.ResultMeasure.MeasureUnitCode",    "TADA.MethodSpeciationName",
     "TADA.ResultSampleFractionText",
-    "TADA.PairingGroup",
-    "TADA.PairingGroupRank"
+    "TADA.PairingGroup",    "TADA.PairingGroupRank"
   )
 
   prep.ref <- function(.data) {
@@ -76,12 +70,10 @@ TADA_CreatePairRef <- function(
       dplyr::ungroup() |>
       # retain required columns
       dplyr::select(
-        TADA.CharacteristicName,
-        TADA.ResultMeasure.MeasureUnitCode,
+        TADA.CharacteristicName,        TADA.ResultMeasure.MeasureUnitCode,
         TADA.MethodSpeciationName,
         TADA.ResultSampleFractionText,
-        NCount
-      ) |>
+        NCount      ) |>
       # retain only distinct rows
       dplyr::distinct() |>
       # arrange from largest to smallest number of results
