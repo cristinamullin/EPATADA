@@ -559,9 +559,7 @@ TADA_RetainRequired <- function(.data) {
   req.check <- intersect(require.cols, na.cols)
 
   # create character string for list of required columns containing only NAs
-  req.paste <- stringi::stri_replace_last_fixed(
-    paste(as.character(req.check), collapse = ", ", sep = ""),
-    ", ",
+  req.paste <- stringi::stri_replace_last_fixed(    paste(as.character(req.check), collapse = ", ", sep = ""),    ", ",
     " and "
   )
 
@@ -569,10 +567,7 @@ TADA_RetainRequired <- function(.data) {
   rm(na.cols)
 
   # create character string for list of removed columns
-  remove.paste <- stringi::stri_replace_last_fixed(
-    paste(as.character(remove.cols), collapse = ", ", sep = ""),
-    ", ",
-    " and "
+  remove.paste <- stringi::stri_replace_last_fixed(    paste(as.character(remove.cols), collapse = ", ", sep = ""),    ", ",    " and "
   )
 
   # print list of columns removed from data frame
