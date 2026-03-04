@@ -88,11 +88,15 @@ TADA_HarmonizeSynonyms <- function(.data, ref, np_speciation = TRUE) {
   # Should this be specified in the template instead? 7/25/25 cm
   .data <- .data |>
     dplyr::mutate(
-      TADA.ResultSampleFractionText = replace(        TADA.ResultSampleFractionText,        TADA.ResultSampleFractionText %in% c("NONE"),        NA
+      TADA.ResultSampleFractionText = replace(
+        TADA.ResultSampleFractionText,
+        TADA.ResultSampleFractionText %in% c("NONE"),
+        NA
       ),
       TADA.MethodSpeciationName = replace(
         TADA.MethodSpeciationName,
-        TADA.MethodSpeciationName %in% c("NONE"),        NA
+        TADA.MethodSpeciationName %in% c("NONE"),
+        NA
       )
     )
 
