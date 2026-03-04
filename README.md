@@ -16,7 +16,7 @@ Tools for Automated Data Analysis, or TADA, is being developed to help States, T
 
 -   [How to Contribute](https://usepa.github.io/EPATADA/articles/CONTRIBUTING.html)
 
-    -   We encourage stakeholders to test the functionality and provide feedback. Moreover, open source software provides an avenue for water quality data originators and users to develop and share code, and we welcome your contributions! We hope to build a collaborative community dedicated to this effort where TADA users and contributors can discover, share and build the functionality over time.
+    -   Please test and provide feedback. Moreover, open source software provides an avenue for water quality data originators and users to develop and share code, and we welcome your contributions! We hope to build a collaborative community dedicated to this effort where TADA users and contributors can discover, share and build the functionality over time.
 
 -   More information on how TADA leverages the [WQX QAQC Service](https://usepa.github.io/EPATADA/articles/WQXValidationService.html)
 
