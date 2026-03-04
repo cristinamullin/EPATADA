@@ -19,11 +19,15 @@ TADA_SummarizeColumn <- function(.data, col = "TADA.CharacteristicName") {
   .data$summ <- .data[, col]
   # Summarize WQP data pull
   wqp_summary <- .data |>
-    dplyr::group_by(summ) |>    dplyr::summarize(      n_sites = length(unique(TADA.MonitoringLocationIdentifier)),
-      n_records = length(TADA.ResultMeasureValue),      .groups = "drop"
+    dplyr::group_by(summ) |>
+    dplyr::summarize(
+      n_sites = length(unique(TADA.MonitoringLocationIdentifier)),
+      n_records = length(TADA.ResultMeasureValue),
+      .groups = "drop"
     ) |>
     dplyr::select(summ, n_sites, n_records)
-  names(wqp_summary)[names(wqp_summary) == "summ"] <- col  return(wqp_summary)
+  names(wqp_summary)[names(wqp_summary) == "summ"] <- col
+  return(wqp_summary)
 }
 
 #' Generate Statistics Table
