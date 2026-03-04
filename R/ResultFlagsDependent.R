@@ -88,8 +88,7 @@ TADA_FlagFraction <- function(.data, clean = TRUE, flaggedonly = FALSE) {
     dplyr::rename(TADA.SampleFraction.Flag = TADA.WQXVal.Flag) |>
     dplyr::distinct()
   # rename NA values to "Not Reviewed" in TADA.SampleFraction.Flag column
-  check.data["TADA.SampleFraction.Flag"][is.na(check.data[
-    "TADA.SampleFraction.Flag"
+  check.data["TADA.SampleFraction.Flag"][is.na(check.data[    "TADA.SampleFraction.Flag"
   ])] <- "Not Reviewed"
 
   # if all rows are "Pass", return input unchanged
@@ -101,8 +100,7 @@ TADA_FlagFraction <- function(.data, clean = TRUE, flaggedonly = FALSE) {
       FALSE
   ) {
     if (flaggedonly == FALSE) {
-      print(
-        "All characteristic/fraction combinations are valid in your dataframe. Returning input dataframe with TADA.SampleFraction.Flag column for tracking."
+      print(        "All characteristic/fraction combinations are valid in your dataframe. Returning input dataframe with TADA.SampleFraction.Flag column for tracking."
       )
       check.data <- TADA_OrderCols(check.data)
       return(check.data)
@@ -111,9 +109,7 @@ TADA_FlagFraction <- function(.data, clean = TRUE, flaggedonly = FALSE) {
       print(
         "This dataframe is empty because we did not find any Suspect fraction/characteristic combinations in your dataframe"
       )
-      empty.data <- dplyr::filter(
-        check.data,
-        TADA.SampleFraction.Flag == "Suspect"
+      empty.data <- dplyr::filter(        check.data,        TADA.SampleFraction.Flag == "Suspect"
       )
       empty.data <- TADA_OrderCols(empty.data)
       return(empty.data)
@@ -143,9 +139,7 @@ TADA_FlagFraction <- function(.data, clean = TRUE, flaggedonly = FALSE) {
   # flagged output, errors only
   if (clean == FALSE & flaggedonly == TRUE) {
     # filter out valid characteristic-fraction combinations
-    Suspect.data <- dplyr::filter(
-      check.data,
-      TADA.SampleFraction.Flag == "Suspect"
+    Suspect.data <- dplyr::filter(      check.data,      TADA.SampleFraction.Flag == "Suspect"
     )
     Suspect.data <- TADA_OrderCols(Suspect.data)
     return(Suspect.data)
@@ -234,13 +228,15 @@ TADA_FlagFraction <- function(.data, clean = TRUE, flaggedonly = FALSE) {
 #'
 TADA_FlagSpeciation <- function(
   .data,
-  clean = c("suspect_only", "nonstandardized_only", "both", "none"),
+  clean = c("suspect_only", "nonstandardized_only", 
+            "both", "none"),
   flaggedonly = FALSE
 ) {
   # check .data is data.frame and has required columns
   TADA_CheckColumns(
     .data,
-    c("TADA.CharacteristicName", "TADA.MethodSpeciationName")
+    c("TADA.CharacteristicName", 
+      "TADA.MethodSpeciationName")
   )
   # check clean is boolean
   TADA_CheckType(clean, "character")
