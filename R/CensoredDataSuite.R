@@ -59,17 +59,22 @@ TADA_IDCensoredData <- function(.data) {
   # and the TADA.DetectionQuantitationLimitMeasure.MeasureValue and unit is populated
   # if more are added, they need to be included below as well
 
-  .data$TADA.ResultMeasureValue <- ifelse(    (.data$ResultMeasureValue == "BPQL" |      .data$ResultMeasureValue == "BDL" |      .data$ResultMeasureValue == "ND") &
+  .data$TADA.ResultMeasureValue <- ifelse(
+    (.data$ResultMeasureValue == "BPQL" |
+      .data$ResultMeasureValue == "BDL" |
+      .data$ResultMeasureValue == "ND") &
       !is.na(.data$TADA.DetectionQuantitationLimitMeasure.MeasureValue) &
       !is.na(.data$TADA.DetectionQuantitationLimitMeasure.MeasureUnitCode),
-    .data$TADA.DetectionQuantitationLimitMeasure.MeasureValue,    .data$TADA.ResultMeasureValue
+    .data$TADA.DetectionQuantitationLimitMeasure.MeasureValue,
+    .data$TADA.ResultMeasureValue
   )
 
   # this does the same as above for the units
   .data$TADA.ResultMeasure.MeasureUnitCode <- ifelse(
     (.data$ResultMeasureValue == "BPQL" |
       .data$ResultMeasureValue == "BDL" |
-      .data$ResultMeasureValue == "ND") &      !is.na(.data$TADA.DetectionQuantitationLimitMeasure.MeasureValue) &
+      .data$ResultMeasureValue == "ND") &
+      !is.na(.data$TADA.DetectionQuantitationLimitMeasure.MeasureValue) &
       !is.na(.data$TADA.DetectionQuantitationLimitMeasure.MeasureUnitCode),
     .data$TADA.DetectionQuantitationLimitMeasure.MeasureUnitCode,
     .data$TADA.ResultMeasure.MeasureUnitCode
