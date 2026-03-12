@@ -41,7 +41,9 @@
 #'
 TADA_CreatePairRef <- function(
   .data,
-  ph = TRUE,  hardness = TRUE,  temp = TRUE,
+  ph = TRUE,
+  hardness = TRUE,
+  temp = TRUE,
   chloride = TRUE,
   salinity = TRUE,
   other_char = "null"
@@ -52,7 +54,8 @@ TADA_CreatePairRef <- function(
   # name columns in pair.ref df
   colnames(pair.ref) <- c(
     "TADA.CharacteristicName",
-    "TADA.ResultMeasure.MeasureUnitCode",    "TADA.MethodSpeciationName",
+    "TADA.ResultMeasure.MeasureUnitCode",
+    "TADA.MethodSpeciationName",
     "TADA.ResultSampleFractionText",
     "TADA.PairingGroup",
     "TADA.PairingGroupRank"
@@ -70,10 +73,12 @@ TADA_CreatePairRef <- function(
       # count number of results in TADA df for each group
       dplyr::mutate(NCount = length(TADA.ResultMeasureValue)) |>
       # ungroup results
-      dplyr::ungroup() |>      # retain required columns
+      dplyr::ungroup() |> # retain required columns
       dplyr::select(
-        TADA.CharacteristicName,        TADA.ResultMeasure.MeasureUnitCode,
-        TADA.MethodSpeciationName,        TADA.ResultSampleFractionText,
+        TADA.CharacteristicName,
+        TADA.ResultMeasure.MeasureUnitCode,
+        TADA.MethodSpeciationName,
+        TADA.ResultSampleFractionText,
         NCount
       ) |>
       # retain only distinct rows
