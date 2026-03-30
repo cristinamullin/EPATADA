@@ -306,7 +306,10 @@ TADA_DefineCriteriaMethodology <- function(
       auto_assign == FALSE && is.null(MLSummaryRef) && is.null(criteriaMethods)
     ) {
       suppressMessages(
-        TADA_ParamRef <- TADA_ParametersForAnalysis(          .data = .data,          org_id = org_id,          excel = excel,
+        TADA_ParamRef <- TADA_ParametersForAnalysis(
+          .data = .data,
+          org_id = org_id,
+          excel = excel,
           overwrite = overwrite
         )
       )
@@ -314,8 +317,10 @@ TADA_DefineCriteriaMethodology <- function(
       suppressWarnings(
         TADA_usesRef <- TADA_UsesForAnalysis(
           .data,
-          paramRef = TADA_ParamRef,          org_id = org_id,
-          excel = excel,          overwrite = overwrite
+          paramRef = TADA_ParamRef,
+          org_id = org_id,
+          excel = excel,
+          overwrite = overwrite
         )
       )
 
