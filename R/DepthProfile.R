@@ -1,6 +1,6 @@
 #' TADA_FlagDepthCategory
 #'
-#' This function creates a new column, TADA.DepthCategory.Flag with values: "No
+#' This functiony creates a new column, TADA.DepthCategory.Flag with values: "No
 #' depth info", "Surface", "Bottom", and
 #' "Middle" when multiple depths are available.
 #' Categories are: less than 2m (or user specified value) depth = "Surface",
