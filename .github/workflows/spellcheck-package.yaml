@@ -3,13 +3,8 @@ on:
     branches: [develop]
   pull_request:
     branches: [develop]
-    types: [opened, reopened, synchronize, ready_for_review]
 
 name: spelling-check
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -20,8 +15,6 @@ permissions:
 
 jobs:
   spelling-check:
-    # Skip draft PRs; run on non-PR triggers and non-draft PR events
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -57,12 +50,11 @@ jobs:
           cat(header, file = log_path, append = FALSE)
 
           if (has_errors) {
-            # Stable ordering
-            ord <- order(res$filename, res$line, res$word, na.last = TRUE)
+            ord <- order(res$file, res$line, res$word, na.last = TRUE)
             res <- res[ord, , drop = FALSE]
 
             # Group by file and list words with lines
-            files <- split(res, res$filename)
+            files <- split(res, res$file)
             for (fname in names(files)) {
               cat(sprintf("%s\n", fname), file = log_path, append = TRUE)
               df <- files[[fname]]
@@ -70,6 +62,7 @@ jobs:
                 line <- df$line[i]
                 if (is.null(line) || is.na(line)) line <- "n/a"
                 word <- df$word[i]
+                if (is.null(word) || is.na(word) || !nzchar(word)) word <- "(unknown)"
                 cat(sprintf("  - line %s: %s\n", line, word), file = log_path, append = TRUE)
               }
               cat("\n", file = log_path, append = TRUE)
