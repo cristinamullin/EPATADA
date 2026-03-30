@@ -36,6 +36,7 @@ ResultDepthHeightMeasure Result Value/Unit columns."></head><body>
     <li><a class="dropdown-item" href="../articles/ExampleMod3CriteriaMethodsAltOptions.html">TADA Module 3: Alternative Options to Generate the Criteria and Methodology template for User Input</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Workshops</h6></li>
+    <li><a class="dropdown-item" href="../articles/PenobscotNationWorkflow.html">An Example TADA Workflow Using Penobscot Nation Data</a></li>
     <li><a class="dropdown-item" href="../articles/TADAAssessmentUnitUseCase.html">TADA: Assessment Unit Use Case Demo</a></li>
     <li><a class="dropdown-item" href="../articles/WQX3-Migration.html">WQX 3.0 Migration</a></li>
     <li><a class="dropdown-item" href="../articles/WQXValidationService.html">WQX QAQC Service User Guide</a></li>
@@ -159,9 +160,9 @@ unit = "m".</p>
 <span class="r-in"><span><span class="co"># Compare columns before and after transformation to see example</span></span></span>
 <span class="r-in"><span><span class="co"># transformation from "meters" to "m"</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">DepthUnitsNotConverted</span><span class="op">$</span><span class="va">TADA.ActivityDepthHeightMeasure.MeasureUnitCode</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA     "m"    "feet"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""     "m"    NA     "feet"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">DepthUnitsNotConverted</span><span class="op">$</span><span class="va">ActivityDepthHeightMeasure.MeasureUnitCode</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA     "m"    "feet"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] ""     "m"    NA     "feet"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

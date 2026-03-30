@@ -46,6 +46,7 @@ and flaggedonly = FALSE, the function will not make any changes to the data."></
     <li><a class="dropdown-item" href="../articles/ExampleMod3CriteriaMethodsAltOptions.html">TADA Module 3: Alternative Options to Generate the Criteria and Methodology template for User Input</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Workshops</h6></li>
+    <li><a class="dropdown-item" href="../articles/PenobscotNationWorkflow.html">An Example TADA Workflow Using Penobscot Nation Data</a></li>
     <li><a class="dropdown-item" href="../articles/TADAAssessmentUnitUseCase.html">TADA: Assessment Unit Use Case Demo</a></li>
     <li><a class="dropdown-item" href="../articles/WQX3-Migration.html">WQX 3.0 Migration</a></li>
     <li><a class="dropdown-item" href="../articles/WQXValidationService.html">WQX QAQC Service User Guide</a></li>
@@ -164,7 +165,7 @@ submitted to WQP is NA.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Show data where the QAPPApprovedIndicator equals "Y" or "NA":</span></span></span>
 <span class="r-in"><span><span class="va">QAPPapproved_clean</span> <span class="op">&lt;-</span> <span class="fu">TADA_FindQAPPApproval</span><span class="op">(</span><span class="va">Data_R5_TADAPackageDemo</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Data is flagged but not removed because clean and cleanNA were FALSE"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Data is flagged but not removed because clean and cleanNA were FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Show only data where the QAPPApprovedIndicator equals "Y":</span></span></span>
 <span class="r-in"><span><span class="va">QAPPapproved_cleanNAs</span> <span class="op">&lt;-</span> <span class="fu">TADA_FindQAPPApproval</span><span class="op">(</span><span class="va">Data_R5_TADAPackageDemo</span>, cleanNA <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>

@@ -45,6 +45,7 @@
     <li><a class="dropdown-item" href="../articles/ExampleMod3CriteriaMethodsAltOptions.html">TADA Module 3: Alternative Options to Generate the Criteria and Methodology template for User Input</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Workshops</h6></li>
+    <li><a class="dropdown-item" href="../articles/PenobscotNationWorkflow.html">An Example TADA Workflow Using Penobscot Nation Data</a></li>
     <li><a class="dropdown-item" href="../articles/TADAAssessmentUnitUseCase.html">TADA: Assessment Unit Use Case Demo</a></li>
     <li><a class="dropdown-item" href="../articles/WQX3-Migration.html">WQX 3.0 Migration</a></li>
     <li><a class="dropdown-item" href="../articles/WQXValidationService.html">WQX QAQC Service User Guide</a></li>
@@ -85,7 +86,7 @@
       <h1>TADA Module 1: Training for Beginner R Users</h1>
                         <h4 data-toc-skip class="author">TADA Team</h4>
             
-            <h4 data-toc-skip class="date">2026-03-04</h4>
+            <h4 data-toc-skip class="date">2026-03-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/USEPA/EPATADA/blob/develop/vignettes/TADAModule1_BeginnerTraining.Rmd" class="external-link"><code>vignettes/TADAModule1_BeginnerTraining.Rmd</code></a></small>
       <div class="d-none name"><code>TADAModule1_BeginnerTraining.Rmd</code></div>
@@ -98,11 +99,11 @@
 </h2>
 <p>Thank you for your interest in Tools for Automated Data Analysis
 (TADA). TADA is an open-source tool set built in the R programming
-language. This <a href="https://bookdown.org/yihui/rmarkdown/" class="external-link">RMarkdown</a> document
-walks users through how to download the TADA R package from GitHub,
-access and parameterize several important functions, and create basic
-visualizations with a sample data set. The sample data set contains data
-from one week from all EPA Region 5 states.</p>
+language. This <a href="https://yihui.org/rmarkdown/" class="external-link">RMarkdown</a>
+document walks users through how to download the TADA R package from
+GitHub, access and parameterize several important functions, and create
+basic visualizations with a sample data set. The sample data set
+contains data from one week from all EPA Region 5 states.</p>
 <p><strong>Note: TADA is still under development. New functionality is
 added weekly, and sometimes we need to make bug fixes in response to
 tester and user feedback. We appreciate your feedback, patience, and
@@ -807,7 +808,7 @@ UniqueHarmonizationRef table.</em></p>
 <p>This section covers summing nutrient subspecies to estimate total
 nitrogen and phosphorus. This can be challenging because some
 subspecies/compounds overlap in total nutrient calculations. Thus,
-<strong>TADA_CalculateTotalNP</strong> uses the <a href="https://echo.epa.gov/trends/loading-tool/resources/nutrient-aggregation" class="external-link">Nutrient
+<strong>TADA_CalculateTotalNP</strong> uses the <a href="https://echo.epa.gov/trends/loading-tool/resources/technical-background-methodology/nutrient-aggregation" class="external-link">Nutrient
 Aggregation logic</a> to add subspecies to obtain a total. TADA adds one
 more equation to the mix: total particulate nitrogen + total dissolved
 nitrogen. The function uses as many subspecies as possible to calculate
